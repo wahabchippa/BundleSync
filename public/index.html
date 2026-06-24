@@ -472,8 +472,8 @@ function saveNewPin(){if(cu?.role!=='Admin'||!userForPinReset)return;const boxes
 function normalizeSearch(q){return q.trim().toUpperCase().replace(/[\/\\_\-\s]+/g,'')}
 function matchesQuery(fieldValue,normalizedQuery){if(!fieldValue)return false;const normalized=String(fieldValue).toUpperCase().replace(/[\/\\_\-\s]+/g,'');return normalized.includes(normalizedQuery)||normalizedQuery.includes(normalized)}
 
-async function mAPI(q){await new Promise(r=>setTimeout(r,500));const nq=normalizeSearch(q);if(!nq)throw new Error('Enter a search term');const allOrders=Object.values(MK.orders);let matchedOrder=allOrders.find(o=>matchesQuery(o.fleek_id,nq)||matchesQuery(o.order_number,nq));if(!matchedOrder){const buyerMatch=Object.keys(bM).find(cid=>{const bid=bM[cid];return bid&&normalizeSearch(bid)===nq});if(buyerMatch){matchedOrder=allOrders.find(o=>o.customer_id===buyerMatch)}}if(!matchedOrder)throw new Error(`"${q}" not found`);const buyerId=matchedOrder.customer_id;const buyerOrders=allOrders.filter(o=>o.customer_id===buyerId);buyerOrders.sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));return{customer_id:buyerId,customer_country:matchedOrder.customer_country,searched_fleek_id:matchedOrder.fleek_id,orders:buyerOrders.map(o=>({...o})),summary:{total:buyerOrders.length,qty:buyerOrders.reduce((s,o)=>s+(o.quantity_sold||0),0),vendors:[...new Set(buyerOrders.map(o=>o.vendor))].length,complete:buyerOrders.filter(o=>o.packing_status==='Complete').length}}}
-async function mSave(fid,st){await new Promise(r=>setTimeout(r,300));if(MK.orders[fid]){MK.orders[fid].packing_status=st;MK.orders[fid].marking_updated_at=new Date().toISOString()}}
+async function mAPI(q){const r=await fetch('/api/search?fleek_id='+encodeURIComponent(q));const d=await r.json();if(!r.ok)throw new Error(d.message||'Search failed');return{customer_id:d.customer_id,customer_country:d.customer_country,searched_fleek_id:d.searched_fleek_id,orders:d.orders,summary:{total:d.summary.total_orders,qty:d.summary.total_quantity,vendors:d.summary.unique_vendors,complete:d.summary.complete_count}}}
+async function mSave(fid,st){const r=await fetch('/api/marking',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fleek_id:fid,packing_status:st,marked_by:cu?.name||'Unknown'})});if(!r.ok){const d=await r.json();throw new Error(d.error||'Save failed')}}
 function sL(){$('emp')?.classList.add('hidden');$('er')?.classList.add('hidden');$('res')?.classList.add('hidden');$('ld')?.classList.remove('hidden')}
 function hL(){$('ld')?.classList.add('hidden')}
 function sE(t,m){hL();$('emp')?.classList.add('hidden');$('res')?.classList.add('hidden');$('er')?.classList.remove('hidden');$('eT').textContent=t;$('eM').textContent=m}
@@ -570,3 +570,4 @@ const _w=setInterval(()=>{if(cu){clearInterval(_w);$('sI').value='FLK-001';setTi
 </script>
 </body>
 </html>
+
