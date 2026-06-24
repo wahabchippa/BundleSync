@@ -12,7 +12,7 @@ const CONFIG = {
     refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
     spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID || '13gjj21TS80z2HdNzWxl5Ciftfutd_4sHyEy_yJjvebM',
     sheetName: process.env.GOOGLE_SHEET_NAME || 'RAW DATA',
-    range: 'A:CZ', // Extended to include Column CQ
+    range: 'A:CZ',
   },
   supabase: {
     url: process.env.SUPABASE_URL,
@@ -24,27 +24,27 @@ const CONFIG = {
 };
 
 // ============================================================
-// COLUMN MAPPING — Updated with zone_location (Column CQ = index 94)
+// COLUMN MAPPING — CORRECTED based on actual sheet headers
 // ============================================================
 
 const COLUMN_MAP = {
   created_at: 0,          // Column A
   order_number: 3,        // Column D
   fleek_id: 4,            // Column E (PRIMARY KEY)
-  customer_id: 5,         // Column F
-  customer_country: 7,    // Column H
-  latest_status: 9,       // Column J
-  latest_status_date: 10, // Column K
-  item_name: 14,          // Column O
-  category: 15,           // Column P
-  product_type: 16,       // Column Q
-  quantity_sold: 17,      // Column R
-  vendor: 19,             // Column T
-  vendor_zone: 20,        // Column U
-  is_zone_vendor: 21,     // Column V
-  qc_exclusion_type: 22,  // Column W
-  bargain_bin_flag: 24,   // Column Y
-  zone_location: 94,      // Column CQ - Zone Location (PK QC Center / PK Zone)
+  latest_status: 5,       // Column F
+  latest_status_date: 6,  // Column G
+  item_name: 47,          // Column AV
+  product_type: 48,       // Column AW
+  customer_id: 49,        // Column AX
+  customer_country: 50,   // Column AY
+  vendor: 53,             // Column BB
+  vendor_zone: 56,        // Column BE
+  is_zone_vendor: 57,     // Column BF
+  qc_exclusion_type: 84,  // Column CG
+  quantity_sold: 87,      // Column CJ
+  bargain_bin_flag: 88,   // Column CK
+  category: 89,           // Column CL
+  zone_location: 94,      // Column CQ (QC or zone)
 };
 
 // ============================================================
@@ -162,7 +162,7 @@ function extractRowData(row) {
     is_zone_vendor: parseBoolean(row[COLUMN_MAP.is_zone_vendor]),
     qc_exclusion_type: get('qc_exclusion_type'),
     bargain_bin_flag: parseBoolean(row[COLUMN_MAP.bargain_bin_flag]),
-    zone_location: get('zone_location'), // New field from Column CQ
+    zone_location: get('zone_location'),
   };
 }
 
@@ -200,7 +200,7 @@ async function fetchSheetData() {
 }
 
 // ============================================================
-// FETCH MARKINGS FROM SUPABASE (Now includes packing_status)
+// FETCH MARKINGS FROM SUPABASE
 // ============================================================
 
 async function getMarkingsForFleekIds(fleekIds) {
@@ -239,7 +239,7 @@ async function getMarkingsForFleekIds(fleekIds) {
 }
 
 // ============================================================
-// SEARCH & 7-DAY CONSOLIDATION LOGIC
+// SEARCH & CONSOLIDATION LOGIC
 // ============================================================
 
 async function searchAndConsolidate(searchQuery) {
@@ -346,14 +346,12 @@ export default async function handler(req, res) {
       marking_updated_by: markingsMap[order.fleek_id]?.marked_by || null,
     }));
 
-    // Calculate zone counts
     const zoneCounts = {
       all: ordersWithMarkings.length,
       pk_qc_center: ordersWithMarkings.filter(o => o.zone_location === 'PK QC Center').length,
       pk_zone: ordersWithMarkings.filter(o => o.zone_location === 'PK Zone').length,
     };
 
-    // Calculate status counts
     const statusCounts = {
       pending: ordersWithMarkings.filter(o => o.packing_status === 'Pending').length,
       hold_bundling: ordersWithMarkings.filter(o => o.packing_status === 'Hold for bundling').length,
