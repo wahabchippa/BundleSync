@@ -21,6 +21,9 @@ const ALLOWED_STATUSES = new Set([
   'QC_PENDING', 'QC_APPROVED', 'QC_HOLD', 'PICKUP_FAILED', 'FIRST_REPLACEMENT'
 ]);
 
+const MAX_QUANTITY = 100;
+const MIN_ORDERS_PER_CUSTOMER = 2;
+
 const COLUMN_MAP = {
   created_at: 0, order_number: 3, fleek_id: 4, latest_status: 5, latest_status_date: 6,
   item_name: 47, product_type: 48, customer_id: 49, customer_country: 50,
@@ -28,9 +31,8 @@ const COLUMN_MAP = {
   qc_exclusion_type: 84, quantity_sold: 87, bargain_bin_flag: 88, category: 89, zone_location: 94,
 };
 
-// ===== CACHE (5 min) =====
 let cache = { data: null, timestamp: 0 };
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL_MS = 5 * 60 * 1000;
 
 let sheetsClient = null;
 async function getSheets() {
@@ -70,15 +72,21 @@ async function fetchFreshData() {
 
   const rows = (resp.data.values || []).slice(1);
 
-  // 3. Filter
-  const orders = rows.map(r => {
+  // 3. FILTER 1 (Status) + FILTER 2 (Quantity ≤ 100) + has marking exception
+  let filteredOrders = rows.map(r => {
     const fleek_id = clean(r[COLUMN_MAP.fleek_id]);
-    const latest_status = clean(r[COLUMN_MAP.latest_status]);
     if (!fleek_id) return null;
 
-    const statusOk = latest_status && ALLOWED_STATUSES.has(latest_status.toUpperCase());
+    const latest_status = clean(r[COLUMN_MAP.latest_status]);
+    const qty = num(r[COLUMN_MAP.quantity_sold]);
     const hasMarking = markedFleekIds.has(fleek_id);
-    if (!statusOk && !hasMarking) return null;
+    const statusOk = latest_status && ALLOWED_STATUSES.has(latest_status.toUpperCase());
+
+    // Status OK + qty OK
+    const qualifiesByStatus = statusOk && (qty == null || qty <= MAX_QUANTITY);
+
+    // Always include if has marking (even if qty > 100 or status changed)
+    if (!qualifiesByStatus && !hasMarking) return null;
 
     return {
       fleek_id,
@@ -91,7 +99,7 @@ async function fetchFreshData() {
       item_name: clean(r[COLUMN_MAP.item_name]),
       category: clean(r[COLUMN_MAP.category]),
       product_type: clean(r[COLUMN_MAP.product_type]),
-      quantity_sold: num(r[COLUMN_MAP.quantity_sold]),
+      quantity_sold: qty,
       vendor: clean(r[COLUMN_MAP.vendor]),
       vendor_zone: clean(r[COLUMN_MAP.vendor_zone]),
       is_zone_vendor: bool(r[COLUMN_MAP.is_zone_vendor]),
@@ -100,10 +108,33 @@ async function fetchFreshData() {
       packing_status: markings[fleek_id]?.packing_status || 'Pending',
       marking_updated_at: markings[fleek_id]?.updated_at || null,
       marking_updated_by: markings[fleek_id]?.marked_by || null,
+      _has_marking: hasMarking,
     };
   }).filter(Boolean);
 
-  return orders;
+  // 4. FILTER 3: Group by customer (name preferred, fallback to id), keep only customers with 2+ orders
+  const groups = {};
+  filteredOrders.forEach(o => {
+    const key = (o.customer_name && o.customer_name.trim())
+      ? 'NAME:' + o.customer_name.trim().toLowerCase()
+      : 'ID:' + (o.customer_id || 'UNKNOWN');
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(o);
+  });
+
+  const finalOrders = [];
+  Object.values(groups).forEach(group => {
+    // Keep if 2+ orders OR any order has marking
+    const hasMarkedOrder = group.some(o => o._has_marking);
+    if (group.length >= MIN_ORDERS_PER_CUSTOMER || hasMarkedOrder) {
+      group.forEach(o => {
+        delete o._has_marking;
+        finalOrders.push(o);
+      });
+    }
+  });
+
+  return finalOrders;
 }
 
 export default async function handler(req, res) {
@@ -132,6 +163,11 @@ export default async function handler(req, res) {
       total: orders.length,
       from_cache: fromCache,
       cache_age_seconds: fromCache ? Math.floor(cacheAge / 1000) : 0,
+      filters_applied: {
+        max_quantity: MAX_QUANTITY,
+        min_orders_per_customer: MIN_ORDERS_PER_CUSTOMER,
+        allowed_statuses: [...ALLOWED_STATUSES],
+      },
       orders,
     });
   } catch (e) {
