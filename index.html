@@ -1,572 +1,536 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BundleSync</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='10' fill='%23111'/%3E%3Cpath d='M24 12L14 17.5V29L24 34.5L34 29V17.5L24 12Z' stroke='white' stroke-width='2.5' stroke-linejoin='round'/%3E%3Cpath d='M24 23V34.5' stroke='white' stroke-width='2.5'/%3E%3Cpath d='M14 17.5L24 23L34 17.5' stroke='white' stroke-width='2.5'/%3E%3C/svg%3E">
-<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
-*{font-family:'Inter',system-ui,sans-serif;box-sizing:border-box}
-:root{--bg:#fff;--s:#f9fafb;--c:#fff;--h:#f3f4f6;--i:#f9fafb;--b:#e5e7eb;--t1:#111827;--t2:#6b7280;--t3:#9ca3af;--t4:#d1d5db;--sh:rgba(0,0,0,.06)}
-[data-theme="dark"]{--bg:#000;--s:#111;--c:#111;--h:#1a1a1a;--i:#1a1a1a;--b:rgba(255,255,255,.1);--t1:#fff;--t2:#d4d4d4;--t3:#a3a3a3;--t4:#525252;--sh:rgba(0,0,0,.5)}
-body{background:var(--bg);color:var(--t1);transition:background .3s,color .3s;margin:0}
-::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:var(--s)}::-webkit-scrollbar-thumb{background:var(--b);border-radius:3px}
-
-.aw{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:var(--bg);transition:opacity .5s,visibility .5s}
-.aw.off{opacity:0;visibility:hidden;pointer-events:none}
-@keyframes su{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}.awe{animation:su .5s cubic-bezier(.16,1,.3,1) forwards}
-.pc{width:52px;height:56px;text-align:center;font-size:22px;font-weight:700;background:var(--i);border:1.5px solid var(--b);border-radius:14px;color:var(--t1);transition:all .2s}
-.pc:focus{outline:none;border-color:var(--t1);box-shadow:0 0 0 3px rgba(255,255,255,.05)}
-.pc.err{border-color:#ef4444;background:rgba(239,68,68,.08)}
-@keyframes pk{0%,100%{transform:translateX(0)}25%,75%{transform:translateX(-5px)}50%{transform:translateX(5px)}}.pks{animation:pk .3s}
-.inp{width:100%;padding:12px 14px;font-size:14px;font-weight:500;background:var(--i);border:1.5px solid var(--b);border-radius:14px;color:var(--t1);transition:all .2s}
-.inp:focus{outline:none;border-color:var(--t1);box-shadow:0 0 0 3px rgba(255,255,255,.05)}.inp::placeholder{color:var(--t3)}
-.btn{width:100%;padding:14px;font-size:14px;font-weight:600;color:#fff;background:#111;border:none;border-radius:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .15s}
-.btn:hover{background:#222}.btn:disabled{background:#555;cursor:not-allowed}
-[data-theme="dark"] .btn{background:#fafafa;color:#111}[data-theme="dark"] .btn:hover{background:#e5e7eb}
-
-.sbb{position:fixed;inset:0;z-index:89;background:rgba(0,0,0,.3);opacity:0;visibility:hidden;transition:all .3s}.sbb.open{opacity:1;visibility:visible}
-.sb{position:fixed;top:0;left:0;bottom:0;width:260px;z-index:90;background:var(--s);border-right:1px solid var(--b);transform:translateX(-100%);transition:transform .3s;display:flex;flex-direction:column}.sb.open{transform:translateX(0)}
-.sl{display:flex;align-items:center;gap:10px;padding:10px 16px;margin:2px 10px;font-size:13px;font-weight:500;color:var(--t2);border-radius:10px;cursor:pointer;border:none;background:none;width:calc(100% - 20px);text-align:left;transition:all .15s}
-.sl:hover{background:var(--h);color:var(--t1)}.sl.on{background:var(--t1);color:var(--bg);font-weight:600}
-
-.tb{background:var(--s);border-bottom:1px solid var(--b);position:sticky;top:0;z-index:50}
-.tt{width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:10px;border:none;cursor:pointer;background:transparent;color:var(--t3);position:relative;overflow:hidden;transition:all .3s}
-.tt:hover{background:var(--h);color:var(--t1)}.tt svg{position:absolute;transition:transform .4s cubic-bezier(.16,1,.3,1),opacity .3s}
-.tt .si{opacity:1;transform:scale(1)}.tt .mn{opacity:0;transform:rotate(-90deg) scale(.5)}
-[data-theme="dark"] .tt .si{opacity:0;transform:rotate(90deg) scale(.5)}[data-theme="dark"] .tt .mn{opacity:1;transform:scale(1)}
-.ua{width:24px;height:24px;background:#111;color:#fff;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700}
-[data-theme="dark"] .ua{background:#fafafa;color:#111}
-
-@keyframes cp{0%,100%{box-shadow:0 0 0 0 transparent}50%{box-shadow:0 0 0 6px rgba(99,102,241,.15)}}.cpulse{animation:cp .6s ease}
-.cs{max-width:520px;margin:0 auto;position:relative}
-.cs input{width:100%;padding:14px 80px 14px 46px;font-size:14px;font-weight:500;background:var(--i);border:1.5px solid var(--b);border-radius:14px;color:var(--t1);transition:all .2s}
-.cs input:focus{outline:none;border-color:var(--t1);box-shadow:0 0 0 3px rgba(255,255,255,.05)}.cs input::placeholder{color:var(--t3)}
-.ck{position:absolute;right:14px;top:50%;transform:translateY(-50%);display:flex;gap:3px;pointer-events:none}
-.ck kbd{padding:3px 6px;font-size:10px;font-weight:600;color:var(--t3);background:var(--c);border:1px solid var(--b);border-radius:5px;font-family:monospace}
-.ls{position:relative}.ls input{width:100%;padding:10px 12px 10px 36px;font-size:12px;background:var(--i);border:1.5px solid var(--b);border-radius:12px;color:var(--t1);transition:all .2s}
-.ls input:focus{outline:none;border-color:var(--t1)}.ls input::placeholder{color:var(--t3)}
-
-.mc{background:var(--c);border:1px solid var(--b);border-radius:18px;padding:20px 24px;transition:all .3s;cursor:pointer;overflow:hidden}
-.mc:hover{border-color:var(--t4);box-shadow:0 8px 24px var(--sh);transform:translateY(-2px)}
-.mc .mv{font-size:32px;font-weight:700;letter-spacing:-.03em;color:var(--t1)}.mc .ml{font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
-.mc .ms{font-size:11px;color:var(--t3);margin-top:6px}
-.mi{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:14px}
-
-.scr{display:none}.scr.on{display:block;animation:si .3s ease forwards}@keyframes si{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.bb{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;font-size:12px;font-weight:600;color:var(--t2);background:var(--s);border:1px solid var(--b);border-radius:10px;cursor:pointer;transition:all .2s}.bb:hover{background:var(--h);color:var(--t1)}
-
-.tw{background:var(--c);border:1px solid var(--b);border-radius:18px;overflow:hidden}
-.th{background:var(--s) !important;border-color:var(--b) !important;color:var(--t2) !important}
-.tf{background:var(--s) !important;border-color:var(--b) !important;color:var(--t3) !important}
-.dr{background:var(--bg);color:var(--t1);transition:background .15s}.dr:hover{background:var(--h) !important}
-.sla{background:rgba(127,29,29,.10) !important;border-left:4px solid #ef4444 !important}.sla:hover{background:rgba(127,29,29,.16) !important}
-@keyframes sp{0%,100%{box-shadow:inset 0 0 0 0 transparent}50%{box-shadow:inset 0 0 0 999px rgba(239,68,68,.03)}}.slap{animation:sp 2.2s infinite}
-
-.ssel{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%239CA3AF' stroke-width='2.5' viewBox='0 0 24 24'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;background-size:12px;padding-right:28px;font-weight:600;font-size:11px;border:1.5px solid var(--b);background-color:var(--i);color:var(--t1);transition:all .15s}
-.ssel:focus{outline:none;border-color:var(--t3)}.ssel option{background:var(--c);color:var(--t1)}
-.sp{background:#fffbeb;border-color:#f59e0b;color:#92400e}.sh{background:#eff6ff;border-color:#3b82f6;color:#1e40af}
-.slt{background:#eef2ff;border-color:#6366f1;color:#3730a3}.sw{background:#fdf2f8;border-color:#ec4899;color:#9d174d}
-.sc{background:#ecfdf5;border-color:#10b981;color:#065f46}
-[data-theme="dark"] .sp{background:#231a08 !important;border-color:#a16207 !important;color:#fde68a !important}
-[data-theme="dark"] .sh{background:#0f1b2f !important;border-color:#2563eb !important;color:#bfdbfe !important}
-[data-theme="dark"] .slt{background:#18142e !important;border-color:#6366f1 !important;color:#c7d2fe !important}
-[data-theme="dark"] .sw{background:#2a1021 !important;border-color:#db2777 !important;color:#fbcfe8 !important}
-[data-theme="dark"] .sc{background:#08241d !important;border-color:#059669 !important;color:#a7f3d0 !important}
-
-.bs0{border-left:3px solid #3b82f6}.bs1{border-left:3px solid #8b5cf6}.bsn{border-left:3px solid transparent}
-
-.mo{position:fixed;inset:0;z-index:8000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.4);backdrop-filter:blur(3px)}.mo.hidden{display:none}
-.mbx{position:relative;width:100%;max-width:540px;max-height:80vh;margin:20px;background:var(--c);border-radius:20px;box-shadow:0 20px 60px var(--sh);overflow:hidden;display:flex;flex-direction:column;border:1px solid var(--b)}
-.mtt{display:flex;border-bottom:1px solid var(--b);background:var(--s)}.mti{flex:1;padding:12px;font-size:13px;font-weight:500;color:var(--t3);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all .15s}.mti.on{color:var(--t1);font-weight:600;border-bottom-color:var(--t1)}
-.mr{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--s);border:1px solid var(--b);border-radius:12px;margin-bottom:8px}.mr:hover{background:var(--h)}
-.le{padding:8px 0;border-bottom:1px solid var(--b);font-size:12px;color:var(--t2);display:flex;gap:8px}.ltt{font-size:10px;font-weight:600;color:var(--t3);white-space:nowrap;min-width:60px}
-
-.chk{width:16px;height:16px;accent-color:#6366f1;cursor:pointer;border-radius:4px}
-.bulk-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 16px;border-radius:12px;background:var(--s);border:1px solid var(--b);margin-bottom:12px}
-
-.zf-btn{padding:6px 14px;font-size:11px;font-weight:600;border-radius:10px;cursor:pointer;border:1.5px solid var(--b);background:var(--c);color:var(--t3);transition:all .2s}
-.zf-btn:hover{background:var(--h);color:var(--t1);border-color:var(--t4)}
-.zf-btn.zf-on{background:var(--t1);color:var(--bg);border-color:var(--t1)}
-
-@keyframes spin{to{transform:rotate(360deg)}}.spin{animation:spin .6s linear infinite}
-@keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}.fin{animation:fi .25s ease-out}
-.skeleton{background:linear-gradient(90deg,var(--s) 25%,var(--h) 50%,var(--s) 75%);background-size:200% 100%;animation:shm 1s infinite}@keyframes shm{0%{background-position:200% 0}100%{background-position:-200% 0}}
-@media print{.np{display:none !important}body>*:not(#ps){display:none !important}#ps{display:block !important}}
-
-/* ===== AUTOCOMPLETE DROPDOWN FIX ===== */
-#acL {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 100%;
-    margin-top: 6px;
-    background: var(--c);
-    border: 1.5px solid var(--b);
-    border-radius: 14px;
-    box-shadow: 0 12px 40px var(--sh);
-    max-height: 220px;
-    overflow-y: auto;
-    z-index: 9999;
-    list-style: none;
-    padding: 4px 0;
-}
-#acL.ac-hide { display: none !important; }
-#acL.ac-show { display: block !important; }
-#acL li.ac-item {
-    padding: 10px 14px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    transition: background .1s;
-    border-radius: 10px;
-    margin: 2px 4px;
-}
-#acL li.ac-item:hover, #acL li.ac-item.ac-hi {
-    background: var(--h);
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logistics Packing Tool</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', system-ui, sans-serif; }
+        body { background: #FFFFFF; }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: #F9FAFB; }
+        ::-webkit-scrollbar-thumb { background: #E5E7EB; border-radius: 3px; }
+        .search-input:focus { outline: none; box-shadow: 0 0 0 2px rgba(17,24,39,0.08); border-color: #9CA3AF; }
+        .data-row:hover { background: #FAFAFA; }
+        .tab { transition: all 0.15s ease; }
+        .tab.active { background: #111827; color: white; }
+        .tab:not(.active):hover { background: #F3F4F6; }
+        .status-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 6px center;
+            background-size: 14px;
+            padding-right: 26px;
+        }
+        .status-select:focus { outline: none; border-color: #6B7280; }
+        .status-pending { background: #FEF3C7; border-color: #FCD34D; color: #92400E; }
+        .status-hold { background: #DBEAFE; border-color: #93C5FD; color: #1E40AF; }
+        .status-lead { background: #E0E7FF; border-color: #A5B4FC; color: #3730A3; }
+        .status-weight { background: #FCE7F3; border-color: #F9A8D4; color: #9D174D; }
+        .status-complete { background: #D1FAE5; border-color: #6EE7B7; color: #065F46; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-in { animation: fadeIn 0.25s ease-out; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spin { animation: spin 0.6s linear infinite; }
+        .skeleton { background: linear-gradient(90deg,#F3F4F6 25%,#E5E7EB 50%,#F3F4F6 75%); background-size: 200% 100%; animation: shimmer 1s infinite; }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        @media print { .no-print { display: none !important; } }
+    </style>
 </head>
-<body class="min-h-screen antialiased">
+<body class="min-h-screen bg-white text-gray-900 antialiased">
 
-<!-- AUTH -->
-<div id="aw" class="aw"><div class="w-full max-w-[390px] px-5 awe">
-<div class="flex items-center justify-center gap-3 mb-8"><div class="w-12 h-12 bg-gray-900 rounded-2xl flex items-center justify-center shadow-lg"><svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg></div>
-<div><div class="text-[22px] font-bold tracking-tight" style="color:var(--t1)">BundleSync</div><div class="text-[10px] tracking-wider font-medium" style="color:var(--t3)">PACKING CONSOLIDATION</div></div></div>
-<div id="lC" class="rounded-[20px] p-7" style="background:var(--c);border:1.5px solid var(--b);box-shadow:0 8px 30px var(--sh)">
-<div class="text-center mb-6"><h2 class="text-[17px] font-semibold" style="color:var(--t1)">Welcome Back</h2><p class="text-[13px] mt-1" style="color:var(--t3)">Type your name and enter PIN</p></div>
-<form id="lF" class="space-y-5" autocomplete="off" novalidate>
-<div><label class="block text-[11px] font-semibold uppercase tracking-wider mb-1.5" style="color:var(--t3)">Team Member</label>
-<div class="relative" id="acW"><svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style="color:var(--t3);z-index:1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-<input type="text" id="acI" class="inp" style="padding-left:38px" placeholder="Click here or type name..."
-    autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
-    data-lpignore="true" data-form-type="other" data-1p-ignore
-    role="combobox" aria-autocomplete="list" required>
-<input type="hidden" id="acV" value="">
-<ul id="acL" class="ac-hide"></ul>
-</div></div>
-<div id="pS" style="opacity:.4;pointer-events:none;transition:all .3s"><label class="block text-[11px] font-semibold uppercase tracking-wider mb-1.5" style="color:var(--t3)">4-Digit PIN</label>
-<div id="pR" class="flex justify-center gap-3"><input type="password" id="p1" class="pc" maxlength="1" inputmode="numeric" required><input type="password" id="p2" class="pc" maxlength="1" inputmode="numeric" required><input type="password" id="p3" class="pc" maxlength="1" inputmode="numeric" required><input type="password" id="p4" class="pc" maxlength="1" inputmode="numeric" required></div>
-<p id="pE" class="text-center text-[12px] text-red-500 mt-2 hidden">Incorrect PIN</p></div>
-<button type="submit" id="lB" class="btn" disabled><span id="lT">Sign In</span><svg id="lSp" class="w-[18px] h-[18px] spin hidden" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg></button></form>
-<div class="text-center mt-5 pt-4" style="border-top:1px solid var(--b)"><span class="text-[13px]" style="color:var(--t3)">New?</span> <button onclick="authTog()" class="text-[13px] font-semibold underline ml-1 cursor-pointer bg-transparent border-none" style="color:var(--t1)">Request Access</button></div></div>
-<div id="rC" class="rounded-[20px] p-7 hidden" style="background:var(--c);border:1.5px solid var(--b)">
-<div class="text-center mb-6"><h2 class="text-[17px] font-semibold" style="color:var(--t1)">Request Access</h2></div>
-<form id="rF" class="space-y-5" autocomplete="off"><div><input type="text" id="rN" class="inp" placeholder="Full name..." required minlength="3"></div><button type="submit" class="btn">Submit</button><p id="rO" class="hidden text-center text-[12px] text-emerald-500 mt-2">✓ Submitted!</p></form>
-<div class="text-center mt-5 pt-4" style="border-top:1px solid var(--b)"><button onclick="authTog()" class="text-[13px] font-semibold underline cursor-pointer bg-transparent border-none" style="color:var(--t1)">Back to Login</button></div></div>
-</div></div>
+    <!-- Header -->
+    <nav class="bg-white border-b border-gray-100 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-sm font-semibold text-gray-900">Packing Team Tool</h1>
+                    <p class="text-[10px] text-gray-400">Zone Management & Order Consolidation</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4 no-print">
+                <div id="statusIndicator" class="flex items-center gap-1.5 text-[10px] text-gray-400">
+                    <span class="w-2 h-2 rounded-full bg-gray-300"></span>
+                    <span>Checking...</span>
+                </div>
+                <span class="text-[10px] text-gray-400 hidden sm:block" id="clock"></span>
+            </div>
+        </div>
+    </nav>
 
-<!-- SIDEBAR -->
-<div id="sbB" class="sbb" onclick="togSB()"></div>
-<aside id="sbE" class="sb">
-<div class="flex items-center gap-2.5 px-5 h-14 shrink-0" style="border-bottom:1px solid var(--b)"><div class="w-8 h-8 bg-gray-900 rounded-xl flex items-center justify-center"><svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg></div><span class="text-[14px] font-bold" style="color:var(--t1)">BundleSync</span></div>
-<div class="flex-1 overflow-y-auto py-3">
-<p class="text-[10px] font-semibold uppercase tracking-wider px-4 py-2" style="color:var(--t3)">Navigation</p>
-<button onclick="goScr('dash');togSB()" data-scr="dash" class="sl on"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard</button>
-<button onclick="goScr('qc');togSB()" data-scr="qc" class="sl"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>PK QC Center<span id="sbQ" class="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded" style="background:rgba(59,130,246,.12);color:#60a5fa">0</span></button>
-<button onclick="goScr('zone');togSB()" data-scr="zone" class="sl"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>PK Zone<span id="sbZ" class="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded" style="background:rgba(139,92,246,.12);color:#a78bfa">0</span></button>
-<div style="height:1px;background:var(--b);margin:8px 16px"></div>
-<p class="text-[10px] font-semibold uppercase tracking-wider px-4 py-2" style="color:var(--t3)">Management</p>
-<button id="sbLg" onclick="openAdm();aTab('logs');togSB()" class="sl" style="display:none"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>Logs</button>
-<button id="sbAd" onclick="openAdm();togSB()" class="sl" style="display:none"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>Admin</button>
-</div>
-<div id="sbU" class="hidden px-4 py-3" style="border-top:1px solid var(--b)"><div class="flex items-center gap-2.5"><div id="sbAv" class="ua w-8 h-8 rounded-xl text-[11px]">?</div><div class="flex-1 min-w-0"><p id="sbNm" class="text-[12px] font-semibold truncate" style="color:var(--t1)">—</p><p id="sbRl" class="text-[10px]" style="color:var(--t3)">—</p></div><button onclick="logout()" class="p-1.5 rounded-lg cursor-pointer border-none bg-transparent" style="color:var(--t3)"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg></button></div></div>
-</aside>
+    <!-- Main -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        
+        <!-- Search -->
+        <section class="no-print mb-6">
+            <div class="max-w-xl mx-auto text-center">
+                <h2 class="text-xl font-semibold text-gray-900">Verify & Consolidate Orders</h2>
+                <p class="mt-1 text-xs text-gray-500">Enter a Fleek ID to find related orders within 7 days.</p>
+                
+                <form id="searchForm" class="mt-5 flex gap-2">
+                    <div class="relative flex-1">
+                        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        <input type="text" id="searchInput" class="search-input w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm placeholder-gray-400" placeholder="Enter Fleek ID or Order Number..." autocomplete="off" spellcheck="false">
+                    </div>
+                    <button type="submit" id="searchBtn" class="px-6 py-3 bg-gray-900 hover:bg-gray-800 disabled:bg-gray-400 text-white text-sm font-medium rounded-xl flex items-center gap-2">
+                        <svg id="searchIcon" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <svg id="loadingIcon" class="w-4 h-4 spin hidden" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                        </svg>
+                        <span id="btnLabel">Verify</span>
+                    </button>
+                </form>
+            </div>
+        </section>
 
-<!-- ADMIN MODAL -->
-<div id="adM" class="mo hidden" onclick="if(event.target===this)closeAdm()"><div class="mbx">
-<div class="flex items-center justify-between px-5 pt-5 pb-3"><div class="flex items-center gap-3"><button onclick="closeAdm();goScr('dash')" class="bb"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>Back</button><h2 class="text-[15px] font-semibold" style="color:var(--t1)">Admin Settings</h2></div>
-<button onclick="closeAdm()" class="p-1.5 rounded-lg border-none cursor-pointer" style="background:var(--h);color:var(--t3)"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
-<div class="mtt"><button onclick="aTab('pend')" id="aTP" class="mti on">Pending</button><button onclick="aTab('team')" id="aTT" class="mti">Team</button><button onclick="aTab('logs')" id="aTL" class="mti">Logs</button></div>
-<div class="flex-1 overflow-y-auto p-5"><div id="aP"></div><div id="aT" class="hidden"></div><div id="aL" class="hidden"></div></div>
-<div id="prOv" style="position:absolute;inset:0;z-index:10;background:rgba(0,0,0,.6);align-items:center;justify-content:center;backdrop-filter:blur(4px);display:none">
-<div class="p-7 rounded-2xl text-center" style="background:var(--c);border:1.5px solid var(--b);box-shadow:0 16px 48px var(--sh);min-width:290px;animation:su .3s cubic-bezier(.16,1,.3,1) forwards">
-<div class="flex items-center justify-center gap-2 mb-5">
-<div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background:var(--s)"><svg class="w-4.5 h-4.5" style="color:var(--t2)" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg></div>
-<div class="text-left"><p class="text-[13px] font-semibold" style="color:var(--t1)">Reset PIN</p><p class="text-[11px]" style="color:var(--t3)">for <b id="prNm" style="color:var(--t1)"></b></p></div>
-</div>
-<div id="prRow" class="flex justify-center gap-2.5 mb-4">
-<input type="password" class="pc" style="width:46px;height:50px;font-size:18px;border-radius:12px" maxlength="1" data-pr="0" inputmode="numeric" autocomplete="off">
-<input type="password" class="pc" style="width:46px;height:50px;font-size:18px;border-radius:12px" maxlength="1" data-pr="1" inputmode="numeric" autocomplete="off">
-<input type="password" class="pc" style="width:46px;height:50px;font-size:18px;border-radius:12px" maxlength="1" data-pr="2" inputmode="numeric" autocomplete="off">
-<input type="password" class="pc" style="width:46px;height:50px;font-size:18px;border-radius:12px" maxlength="1" data-pr="3" inputmode="numeric" autocomplete="off">
-</div>
-<p id="prErr" class="text-[11px] text-red-500 mb-3 hidden">Enter a valid 4-digit PIN</p>
-<div class="flex gap-2">
-<button onclick="closePinResetModal()" class="flex-1 px-3 py-2.5 rounded-xl text-[12px] font-semibold cursor-pointer" style="border:1.5px solid var(--b);color:var(--t2);background:var(--s)">Cancel</button>
-<button onclick="saveNewPin()" class="flex-1 px-3 py-2.5 rounded-xl text-[12px] font-semibold cursor-pointer border-none btn" style="width:auto">Save PIN</button>
-</div>
-</div>
-</div>
-</div></div>
+        <!-- Results -->
+        <section id="results" class="hidden"></section>
 
-<!-- PACKING SLIP -->
-<div id="slM" class="hidden fixed inset-0 z-[9500] flex items-center justify-center bg-black/30 np" onclick="if(event.target===this)closeSl()">
-<div style="background:var(--c);border:1px solid var(--b)" class="w-full max-w-lg max-h-[90vh] mx-4 rounded-2xl flex flex-col overflow-hidden shadow-2xl" onclick="event.stopPropagation()">
-<div class="flex items-center justify-between px-6 pt-5 pb-3" style="border-bottom:1px solid var(--b)"><h2 class="text-[15px] font-semibold" style="color:var(--t1)">Packing Slip</h2><div class="flex gap-2"><button onclick="window.print()" class="btn" style="width:auto;padding:6px 14px;font-size:11px">Print</button><button onclick="closeSl()" class="p-1.5 rounded-lg border-none cursor-pointer" style="background:var(--h);color:var(--t3)"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div></div>
-<div id="slB" class="flex-1 overflow-y-auto px-6 py-4"></div></div></div><div id="ps" class="hidden"></div>
+        <!-- Empty State -->
+        <section id="emptyState" class="mt-12 text-center">
+            <div class="w-14 h-14 mx-auto bg-gray-50 rounded-2xl flex items-center justify-center border border-gray-100">
+                <svg class="w-7 h-7 text-gray-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                </svg>
+            </div>
+            <p class="mt-3 text-sm text-gray-400">No orders verified yet</p>
+        </section>
 
-<!-- TOPBAR -->
-<nav class="tb np"><div class="px-4 sm:px-6 h-[52px] flex items-center gap-3">
-<button onclick="togSB()" class="w-9 h-9 flex items-center justify-center rounded-xl border-none bg-transparent cursor-pointer" style="color:var(--t2)"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
-<div class="flex items-center gap-2 shrink-0"><div class="w-7 h-7 bg-gray-900 rounded-lg flex items-center justify-center"><svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg></div><span class="text-[14px] font-bold tracking-tight hidden sm:block" style="color:var(--t1)">BundleSync</span></div>
-<div class="flex-1"></div><span id="topL" class="text-[11px] font-semibold uppercase tracking-widest hidden sm:block" style="color:var(--t3)">Dashboard</span><div class="flex-1"></div>
-<div class="flex items-center gap-2 shrink-0">
-<button class="tt" onclick="togTh()"><svg class="si w-[18px] h-[18px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg><svg class="mn w-[18px] h-[18px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></button>
-<div id="uP" class="hidden flex items-center gap-1.5 px-2 py-1 rounded-lg" style="background:var(--s)"><div id="uA" class="ua">?</div><span id="uN" class="text-[11px] font-semibold" style="color:var(--t2)">—</span><button onclick="logout()" class="p-1 rounded bg-transparent border-none cursor-pointer" style="color:var(--t3)"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg></button></div>
-<span class="text-[10px] font-mono hidden md:block" style="color:var(--t3)" id="clk"></span>
-</div></div></nav>
+        <!-- Loading State -->
+        <section id="loadingState" class="hidden mt-6">
+            <div class="bg-white border border-gray-100 rounded-2xl p-5">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="skeleton w-6 h-6 rounded"></div>
+                    <div class="skeleton w-40 h-4 rounded"></div>
+                </div>
+                <div class="grid grid-cols-5 gap-3 mb-4">
+                    <div class="skeleton h-14 rounded-xl"></div>
+                    <div class="skeleton h-14 rounded-xl"></div>
+                    <div class="skeleton h-14 rounded-xl"></div>
+                    <div class="skeleton h-14 rounded-xl"></div>
+                    <div class="skeleton h-14 rounded-xl"></div>
+                </div>
+                <div class="space-y-2">
+                    <div class="skeleton h-10 rounded"></div>
+                    <div class="skeleton h-10 rounded"></div>
+                </div>
+            </div>
+        </section>
 
-<!-- MAIN -->
-<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <!-- Error State -->
+        <section id="errorState" class="hidden mt-8">
+            <div class="max-w-sm mx-auto text-center bg-white border border-gray-200 rounded-xl p-6">
+                <div class="w-10 h-10 mx-auto bg-red-50 rounded-xl flex items-center justify-center mb-3">
+                    <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                    </svg>
+                </div>
+                <h3 class="text-sm font-semibold text-gray-900" id="errorTitle">Error</h3>
+                <p class="mt-1 text-xs text-gray-500" id="errorMsg">Something went wrong.</p>
+            </div>
+        </section>
+    </main>
 
-<!-- DASHBOARD -->
-<div id="s-dash" class="scr on">
-<div class="mb-8 mt-2"><form id="sF" class="cs"><svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 pointer-events-none" style="color:var(--t3)" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg><input type="text" id="sI" placeholder="Search Fleek ID, Order, or Buyer..." autocomplete="off" spellcheck="false"><div class="ck"><kbd>Ctrl</kbd><kbd>F</kbd></div></form></div>
-<div class="flex items-end justify-between mb-6"><div><h2 class="text-[17px] font-semibold" style="color:var(--t1)">Warehouse Overview</h2><p class="text-[12px]" style="color:var(--t3)">Real-time packing status</p></div></div>
-<div id="kpi" class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-<div class="mc" onclick="goScr('dash')"><div class="mi" style="background:rgba(59,130,246,.1);color:#3b82f6"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg></div><p class="ml">Pending</p><p class="mv" id="k1">—</p><p class="ms">All zones</p></div>
-<div class="mc" onclick="goScr('qc')"><div class="mi" style="background:rgba(16,185,129,.1);color:#10b981"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg></div><p class="ml">QC Center</p><p class="mv" id="k2">—</p><p class="ms">Quality control</p></div>
-<div class="mc" onclick="goScr('zone')"><div class="mi" style="background:rgba(139,92,246,.1);color:#8b5cf6"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg></div><p class="ml">PK Zone</p><p class="mv" id="k3">—</p><p class="ms">Zone dispatch</p></div>
-<div class="mc" id="kS"><div class="mi" style="background:rgba(239,68,68,.1);color:#ef4444"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg></div><p class="ml">SLA Breach</p><p class="mv" id="k4">—</p><p class="ms">Held >3 days</p></div>
-</div>
-<div id="dC"><section id="res" class="hidden"></section><section id="emp" class="text-center py-14"><div class="w-14 h-14 mx-auto rounded-2xl flex items-center justify-center mb-3" style="background:var(--s);border:1px solid var(--b)"><svg class="w-7 h-7" style="color:var(--t4)" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg></div><p class="text-sm font-medium" style="color:var(--t3)">Search to begin</p></section><section id="ld" class="hidden mt-4"><div class="rounded-2xl p-5" style="background:var(--c);border:1px solid var(--b)"><div class="grid grid-cols-4 gap-3"><div class="skeleton h-12 rounded-xl"></div><div class="skeleton h-12 rounded-xl"></div><div class="skeleton h-12 rounded-xl"></div><div class="skeleton h-12 rounded-xl"></div></div></div></section><section id="er" class="hidden mt-6"><div class="max-w-sm mx-auto text-center p-6 rounded-xl" style="background:var(--c);border:1px solid var(--b)"><h3 class="text-sm font-semibold" style="color:var(--t1)" id="eT">Error</h3><p class="text-xs mt-1" style="color:var(--t3)" id="eM"></p></div></section></div></div>
+    <!-- Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2"></div>
 
-<!-- QC -->
-<div id="s-qc" class="scr">
-<div class="flex flex-wrap items-center justify-between gap-3 mb-4"><div class="flex items-center gap-3"><button onclick="goScr('dash')" class="bb"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>Dashboard</button><h2 class="text-[17px] font-semibold flex items-center gap-2" style="color:var(--t1)"><span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>PK QC Center</h2></div>
-<div class="flex items-center gap-3"><div class="ls relative"><svg class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none" style="color:var(--t3)" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg><input type="text" id="qcS" placeholder="Filter Fleek/Buyer..." oninput="fLoc('qc')"></div><span id="qcB" class="text-[12px] font-bold px-3 py-1.5 rounded-lg" style="background:rgba(59,130,246,.1);color:#60a5fa;border:1px solid rgba(59,130,246,.2)">0</span></div></div>
-<div class="flex flex-wrap gap-2 mb-4" id="qcFilters">
-<button onclick="zoneStatusFilter('qc','all')" class="zf-btn zf-on" data-zf="all">All</button>
-<button onclick="zoneStatusFilter('qc','Pending')" class="zf-btn" data-zf="Pending">⏳ Pending</button>
-<button onclick="zoneStatusFilter('qc','Hold for bundling')" class="zf-btn" data-zf="Hold for bundling">📦 Hold</button>
-<button onclick="zoneStatusFilter('qc','Single dispatch lead time')" class="zf-btn" data-zf="Single dispatch lead time">🚀 Lead Time</button>
-<button onclick="zoneStatusFilter('qc','Single dispatch over weight')" class="zf-btn" data-zf="Single dispatch over weight">⚖️ Overweight</button>
-<button onclick="zoneStatusFilter('qc','Complete')" class="zf-btn" data-zf="Complete">✅ Complete</button>
-</div>
-<div id="qcC"></div></div>
+    <script>
+    const API = '/api';
+    const PACKING_STATUSES = [
+        'Pending',
+        'Hold for bundling',
+        'Single dispatch lead time',
+        'Single dispatch over weight',
+        'Complete'
+    ];
 
-<!-- ZONE -->
-<div id="s-zone" class="scr">
-<div class="flex flex-wrap items-center justify-between gap-3 mb-4"><div class="flex items-center gap-3"><button onclick="goScr('dash')" class="bb"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>Dashboard</button><h2 class="text-[17px] font-semibold flex items-center gap-2" style="color:var(--t1)"><span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span>PK Zone</h2></div>
-<div class="flex items-center gap-3"><div class="ls relative"><svg class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none" style="color:var(--t3)" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg><input type="text" id="znS" placeholder="Filter Fleek/Buyer..." oninput="fLoc('zone')"></div><span id="znB" class="text-[12px] font-bold px-3 py-1.5 rounded-lg" style="background:rgba(139,92,246,.1);color:#a78bfa;border:1px solid rgba(139,92,246,.2)">0</span></div></div>
-<div class="flex flex-wrap gap-2 mb-4" id="znFilters">
-<button onclick="zoneStatusFilter('zone','all')" class="zf-btn zf-on" data-zf="all">All</button>
-<button onclick="zoneStatusFilter('zone','Pending')" class="zf-btn" data-zf="Pending">⏳ Pending</button>
-<button onclick="zoneStatusFilter('zone','Hold for bundling')" class="zf-btn" data-zf="Hold for bundling">📦 Hold</button>
-<button onclick="zoneStatusFilter('zone','Single dispatch lead time')" class="zf-btn" data-zf="Single dispatch lead time">🚀 Lead Time</button>
-<button onclick="zoneStatusFilter('zone','Single dispatch over weight')" class="zf-btn" data-zf="Single dispatch over weight">⚖️ Overweight</button>
-<button onclick="zoneStatusFilter('zone','Complete')" class="zf-btn" data-zf="Complete">✅ Complete</button>
-</div>
-<div id="znC"></div></div>
-</main>
-<div id="toast" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2"></div>
+    let orders = [];
+    let filteredOrders = [];
+    let currentTab = 'all';
+    let saving = new Set();
+    let searchData = null;
 
-<script>
-const U=[{id:1,name:'Abdul wahab',role:'Admin',pin:'0000'},{id:2,name:'Albash akhtar',role:'Manager',pin:'5555'},{id:3,name:'Behzad riaz',role:'Employee',pin:'1234'},{id:4,name:'Ishtiaq ur rehman',role:'Employee',pin:'1234'},{id:5,name:'Hamza saeed',role:'Employee',pin:'1234'},{id:6,name:'Muhammad sohail',role:'Employee',pin:'1234'},{id:7,name:'Faizan',role:'Employee',pin:'1234'}];
-let pend=[],logs=[],cu=null;
-const ST=['Pending','Hold for bundling','Single dispatch lead time','Single dispatch over weight','Complete'];
-const MK={orders:{'FLK-001':{fleek_id:'FLK-001',order_number:'ORD-8801',customer_id:'CUST-PK-55421',created_at:new Date(Date.now()-5*864e5).toISOString(),latest_status:'Processing',item_name:'Samsung Galaxy S24 Case',category:'Accessories',product_type:'Cases',quantity_sold:2,customer_country:'Pakistan',vendor:'MobileMart PK',zone_location:'PK QC Center',packing_status:'Hold for bundling',bargain_bin_flag:false},'FLK-002':{fleek_id:'FLK-002',order_number:'ORD-8802',customer_id:'CUST-PK-55421',created_at:'2026-01-18T09:45:00Z',latest_status:'Processing',item_name:'Anker 65W Charger',category:'Electronics',product_type:'Chargers',quantity_sold:1,customer_country:'Pakistan',vendor:'TechZone',zone_location:'PK Zone',packing_status:'Pending',bargain_bin_flag:true}},cons:{'FLK-001':['FLK-001','FLK-002'],'FLK-002':['FLK-001','FLK-002']}};
-let orders=[],fO=[],sD=null,cTab='all',saving=new Set(),bM={},bC=0,cScr='dash';
-const $=id=>document.getElementById(id);
-const esc=s=>{if(s==null)return'—';const d=document.createElement('div');d.textContent=String(s);return d.innerHTML};
-const fd=d=>{if(!d)return'—';const t=new Date(d);return isNaN(t)?d:t.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})};
-const fdt=d=>{if(!d)return'—';const t=new Date(d);return isNaN(t)?d:fd(d)+', '+t.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})};
-function age(c){if(!c)return 0;const d=new Date(c);return isNaN(d)?0:Math.floor((Date.now()-d)/864e5)}
-function gB(c){if(!c)return'B-000';if(!bM[c]){bC++;bM[c]='B-'+String(bC).padStart(3,'0')}return bM[c]}
-function rB(){bM={};bC=0}
-function pL(m){logs.unshift({time:new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true}),message:m});if(logs.length>100)logs.length=100}
-function toast(m,t='info'){const e=document.createElement('div');e.className=`${t==='error'?'bg-red-600':t==='success'?'bg-emerald-600':'bg-gray-900'} text-white px-4 py-2 rounded-xl text-xs font-medium shadow-lg fin`;e.textContent=m;$('toast').appendChild(e);setTimeout(()=>{e.style.opacity='0';e.style.transition='opacity .2s';setTimeout(()=>e.remove(),200)},3e3)}
-const scf=s=>{const l=(s||'').toLowerCase();if(l==='delivered')return{bg:'rgba(16,185,129,.1)',c:'#10b981',bc:'rgba(16,185,129,.3)'};if(l==='shipped')return{bg:'rgba(59,130,246,.1)',c:'#3b82f6',bc:'rgba(59,130,246,.3)'};if(l==='processing'||l==='pending')return{bg:'rgba(245,158,11,.1)',c:'#f59e0b',bc:'rgba(245,158,11,.3)'};return{bg:'var(--s)',c:'var(--t3)',bc:'var(--b)'}};
-const pC=s=>({Pending:'sp','Hold for bundling':'sh','Single dispatch lead time':'slt','Single dispatch over weight':'sw',Complete:'sc'}[s]||'');
+    const $ = id => document.getElementById(id);
+    const fmtDate = d => { if (!d) return '—'; const dt = new Date(d); return isNaN(dt) ? d : dt.toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'}); };
+    const fmtDateTime = d => { if (!d) return '—'; const dt = new Date(d); return isNaN(dt) ? d : fmtDate(d) + ', ' + dt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); };
+    const esc = s => { if (s == null) return '—'; const d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; };
 
-let dk=localStorage.getItem('bs_t')==='dark';function aT(){document.documentElement.setAttribute('data-theme',dk?'dark':'light')}function togTh(){dk=!dk;localStorage.setItem('bs_t',dk?'dark':'light');aT()}aT();
+    const statusCfg = s => {
+        const l = (s||'').toLowerCase();
+        if (l === 'delivered') return {bg:'bg-emerald-50',text:'text-emerald-700',dot:'bg-emerald-500',border:'border-emerald-100'};
+        if (l === 'shipped') return {bg:'bg-blue-50',text:'text-blue-700',dot:'bg-blue-500',border:'border-blue-100'};
+        if (l === 'processing' || l === 'pending') return {bg:'bg-amber-50',text:'text-amber-700',dot:'bg-amber-500',border:'border-amber-100'};
+        if (l === 'returned' || l === 'cancelled') return {bg:'bg-red-50',text:'text-red-600',dot:'bg-red-500',border:'border-red-100'};
+        return {bg:'bg-gray-50',text:'text-gray-600',dot:'bg-gray-400',border:'border-gray-200'};
+    };
 
-let sbO=false;function togSB(){sbO=!sbO;$('sbE').classList.toggle('open',sbO);$('sbB').classList.toggle('open',sbO)}
+    const packingStatusClass = s => {
+        if (s === 'Pending') return 'status-pending';
+        if (s === 'Hold for bundling') return 'status-hold';
+        if (s === 'Single dispatch lead time') return 'status-lead';
+        if (s === 'Single dispatch over weight') return 'status-weight';
+        if (s === 'Complete') return 'status-complete';
+        return '';
+    };
 
-function goScr(n){cScr=n;document.querySelectorAll('.scr').forEach(e=>e.classList.remove('on'));$('s-'+n)?.classList.add('on');document.querySelectorAll('.sl[data-scr]').forEach(l=>l.classList.toggle('on',l.dataset.scr===n));$('topL').textContent={dash:'Dashboard',qc:'PK QC Center',zone:'PK Zone'}[n]||n;if(n==='qc'&&orders.length){cTab='pk_qc_center';aF();rZT('qcC',fO)}if(n==='zone'&&orders.length){cTab='pk_zone';aF();rZT('znC',fO)}if(n==='dash'){cTab='all';aF()}}
-
-document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='f'){e.preventDefault();const m={dash:$('sI'),qc:$('qcS'),zone:$('znS')};const t=m[cScr]||$('sI');if(t){t.focus();t.select?.();t.closest('.cs,.ls')?.classList.add('cpulse');setTimeout(()=>t.closest('.cs,.ls')?.classList.remove('cpulse'),600)}}});
-
-// ══════════════════════════════════════════════════════
-// AUTOCOMPLETE - COMPLETELY REWRITTEN FIX
-// ══════════════════════════════════════════════════════
-let _ai=-1;
-let _acOpen = false;
-
-function showDrop(){
-    const dd=$('acL');
-    if(!dd) return;
-    dd.classList.remove('ac-hide');
-    dd.classList.add('ac-show');
-    _acOpen = true;
-}
-
-function hideDrop(){
-    const dd=$('acL');
-    if(!dd) return;
-    dd.classList.remove('ac-show');
-    dd.classList.add('ac-hide');
-    _acOpen = false;
-    _ai = -1;
-}
-
-function renderDrop(q){
-    const dd=$('acL');
-    if(!dd) return;
-    const raw=(q||'').trim().toLowerCase();
-    const matched=!raw ? [...U] : U.filter(u=>u.name.toLowerCase().includes(raw));
-
-    if(!matched.length){
-        dd.innerHTML='<li style="padding:10px 14px;color:var(--t3);font-size:13px;list-style:none">No match found</li>';
-        showDrop();
-        return;
+    function toast(msg, type='info') {
+        const t = document.createElement('div');
+        const bg = {info:'bg-gray-900',success:'bg-emerald-600',error:'bg-red-600'}[type] || 'bg-gray-900';
+        t.className = `${bg} text-white px-4 py-2 rounded-xl text-xs font-medium shadow-lg animate-in`;
+        t.textContent = msg;
+        $('toast').appendChild(t);
+        setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity 0.2s'; setTimeout(() => t.remove(), 200); }, 3000);
     }
 
-    dd.innerHTML='';
-    matched.forEach((u,i)=>{
-        const li = document.createElement('li');
-        li.className = 'ac-item';
-        li.dataset.uid = u.id;
+    function showLoading() {
+        $('emptyState').classList.add('hidden');
+        $('errorState').classList.add('hidden');
+        $('results').classList.add('hidden');
+        $('loadingState').classList.remove('hidden');
+        $('searchBtn').disabled = true;
+        $('searchIcon').classList.add('hidden');
+        $('loadingIcon').classList.remove('hidden');
+        $('btnLabel').textContent = 'Searching...';
+    }
 
-        const avBg=u.role==='Admin'?'background:#111;color:#fff': u.role==='Manager'?'background:#3b82f6;color:#fff':'background:#e5e7eb;color:#374151';
-        const idx=u.name.toLowerCase().indexOf(raw);
-        let nameHtml=esc(u.name);
-        if(raw && idx!==-1){
-            nameHtml=esc(u.name.slice(0,idx))+'<mark style="background:#fef08a;border-radius:2px;padding:0 1px">'+esc(u.name.slice(idx,idx+raw.length))+'</mark>'+esc(u.name.slice(idx+raw.length));
+    function hideLoading() {
+        $('loadingState').classList.add('hidden');
+        $('searchBtn').disabled = false;
+        $('searchIcon').classList.remove('hidden');
+        $('loadingIcon').classList.add('hidden');
+        $('btnLabel').textContent = 'Verify';
+    }
+
+    function showError(title, msg) {
+        hideLoading();
+        $('emptyState').classList.add('hidden');
+        $('results').classList.add('hidden');
+        $('errorState').classList.remove('hidden');
+        $('errorTitle').textContent = title;
+        $('errorMsg').textContent = msg;
+    }
+
+    function setDashboardMetricsVisible(isVisible) {
+        const metrics = document.getElementById('dashboardMetrics');
+        if (metrics) metrics.classList.toggle('hidden', !isVisible);
+    }
+
+    function clearDashboardSearchState() {
+        const q = $('searchInput');
+        if (q) q.value = '';
+        $('results')?.classList.add('hidden');
+        $('errorState')?.classList.add('hidden');
+        $('loadingState')?.classList.add('hidden');
+        $('emptyState')?.classList.remove('hidden');
+        setDashboardMetricsVisible(true);
+    }
+
+    async function search(query) {
+        showLoading();
+        try {
+            const res = await fetch(`${API}/search?fleek_id=${encodeURIComponent(query)}`);
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || 'Search failed');
+            searchData = data;
+            orders = data.orders || [];
+            currentTab = 'all';
+            applyFilter();
+            render(data);
+            setDashboardMetricsVisible(false);
+        } catch (e) {
+            setDashboardMetricsVisible(true);
+            showError('Search Failed', e.message);
         }
+    }
 
-        li.innerHTML=`
-            <div style="width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;${avBg}">${u.name[0].toUpperCase()}</div>
-            <div><div style="font-weight:600;font-size:13px;color:var(--t1)">${nameHtml}</div><div style="font-size:10px;color:var(--t3)">${u.role}</div></div>
-        `;
+    function applyFilter() {
+        if (currentTab === 'all') {
+            filteredOrders = [...orders];
+        } else if (currentTab === 'pk_qc_center') {
+            filteredOrders = orders.filter(o => o.zone_location === 'PK QC Center');
+        } else if (currentTab === 'pk_zone') {
+            filteredOrders = orders.filter(o => o.zone_location === 'PK Zone');
+        }
+    }
 
-        // FIX: mousedown + preventDefault so blur doesn't hide dropdown before click
-        li.addEventListener('mousedown', function(e){
-            e.preventDefault();
-            e.stopPropagation();
-            pickUser(u.id);
+    function switchTab(tab) {
+        currentTab = tab;
+        applyFilter();
+        renderTable();
+        updateTabStyles();
+    }
+
+    function updateTabStyles() {
+        document.querySelectorAll('.zone-tab').forEach(t => {
+            t.classList.remove('active');
+            if (t.dataset.tab === currentTab) t.classList.add('active');
         });
-
-        dd.appendChild(li);
-    });
-
-    showDrop();
-}
-
-function pickUser(id){
-    const u=U.find(x=>x.id===id);
-    if(!u) return;
-    const inp = $('acI');
-    inp.value=u.name;
-    $('acV').value=u.id;
-    hideDrop();
-    const ps=$('pS');
-    if(ps){ps.style.opacity='1';ps.style.pointerEvents='auto'}
-    $('lB').disabled=false;
-    setTimeout(()=>$('p1')?.focus(), 50);
-}
-
-function syncTypedUser(){
-    const val=($('acI')?.value||'').trim().toLowerCase();
-    const match=U.find(u=>u.name.toLowerCase()===val);
-    const ps=$('pS');
-    if(match){
-        $('acV').value=match.id;
-        $('lB').disabled=false;
-        if(ps){ps.style.opacity='1';ps.style.pointerEvents='auto'}
-        return match;
     }
-    $('acV').value='';
-    $('lB').disabled=true;
-    if(ps){ps.style.opacity='.4';ps.style.pointerEvents='none'}
-    return null;
-}
 
-function initA(){
-    const inp=$('acI');
-    if(!inp) return;
+    function render(data) {
+        hideLoading();
+        $('emptyState').classList.add('hidden');
+        $('errorState').classList.add('hidden');
+        $('results').classList.remove('hidden');
 
-    // FIX: Randomize name attribute on every focus to kill browser autocomplete
-    inp.addEventListener('focus',function(){
-        this.setAttribute('name', 'bs_' + Math.random().toString(36).slice(2,8));
-        _ai=-1;
-        renderDrop(this.value);
-    });
+        const s = data.summary || {};
+        const zc = s.zone_counts || {};
+        const windowEnd = new Date(new Date(data.searched_date).getTime() + 7*24*60*60*1000);
 
-    inp.addEventListener('input',function(){
-        _ai=-1;
-        renderDrop(this.value);
-        syncTypedUser();
-    });
+        $('results').innerHTML = `
+        <div class="animate-in">
+            <div class="mb-5 p-4 bg-[#F9FAFB] border border-gray-100 rounded-2xl">
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <h3 class="text-sm font-semibold text-gray-900">Packing Consolidation Report</h3>
+                            <span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[9px] font-bold rounded-full border border-emerald-200 uppercase">7-Day</span>
+                        </div>
+                        <p class="text-[11px] text-gray-500">
+                            Customer: <span class="font-semibold text-gray-700">${esc(data.customer_id)}</span>
+                            <span class="mx-1.5 text-gray-300">|</span>
+                            Country: <span class="font-semibold text-gray-700">${esc(data.customer_country)}</span>
+                            <span class="mx-1.5 text-gray-300">|</span>
+                            Window: ${fmtDate(data.searched_date)} → ${fmtDate(windowEnd)}
+                        </p>
+                    </div>
+                    <button onclick="exportCSV()" class="no-print px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-[11px] font-medium text-gray-600 hover:bg-gray-50 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        Export
+                    </button>
+                </div>
+                <div class="grid grid-cols-5 gap-2 mt-4">
+                    <div class="bg-white border border-gray-100 rounded-xl px-3 py-2">
+                        <p class="text-[9px] font-semibold text-gray-400 uppercase">Orders</p>
+                        <p class="text-lg font-bold text-gray-900">${s.total_orders||0}</p>
+                    </div>
+                    <div class="bg-white border border-gray-100 rounded-xl px-3 py-2">
+                        <p class="text-[9px] font-semibold text-gray-400 uppercase">Qty</p>
+                        <p class="text-lg font-bold text-gray-900">${s.total_quantity||0}</p>
+                    </div>
+                    <div class="bg-white border border-gray-100 rounded-xl px-3 py-2">
+                        <p class="text-[9px] font-semibold text-gray-400 uppercase">Vendors</p>
+                        <p class="text-lg font-bold text-gray-900">${s.unique_vendors||0}</p>
+                    </div>
+                    <div class="bg-white border border-gray-100 rounded-xl px-3 py-2">
+                        <p class="text-[9px] font-semibold text-gray-400 uppercase">Bargain</p>
+                        <p class="text-lg font-bold text-gray-900">${s.bargain_bin_count||0}</p>
+                    </div>
+                    <div class="bg-white border border-gray-100 rounded-xl px-3 py-2">
+                        <p class="text-[9px] font-semibold text-gray-400 uppercase">Complete</p>
+                        <p class="text-lg font-bold text-emerald-600">${s.complete_count||0}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="mb-4 flex items-center gap-2">
+                <div class="flex bg-gray-100 rounded-xl p-1">
+                    <button onclick="switchTab('all')" data-tab="all" class="zone-tab tab active px-4 py-2 rounded-lg text-xs font-medium">
+                        All Orders <span class="ml-1 px-1.5 py-0.5 bg-gray-200 text-gray-600 rounded text-[10px]">${zc.all||0}</span>
+                    </button>
+                    <button onclick="switchTab('pk_qc_center')" data-tab="pk_qc_center" class="zone-tab tab px-4 py-2 rounded-lg text-xs font-medium">
+                        PK QC Center <span class="ml-1 px-1.5 py-0.5 bg-blue-100 text-blue-600 rounded text-[10px]">${zc.pk_qc_center||0}</span>
+                    </button>
+                    <button onclick="switchTab('pk_zone')" data-tab="pk_zone" class="zone-tab tab px-4 py-2 rounded-lg text-xs font-medium">
+                        PK Zone <span class="ml-1 px-1.5 py-0.5 bg-purple-100 text-purple-600 rounded text-[10px]">${zc.pk_zone||0}</span>
+                    </button>
+                </div>
+                <div class="flex-1"></div>
+                <p class="text-[10px] text-gray-400">Showing <span id="filterCount" class="font-semibold text-gray-600">${filteredOrders.length}</span> orders</p>
+            </div>
+            <div id="tableContainer"></div>
+        </div>`;
+        renderTable();
+    }
 
-    // Keyboard navigation
-    inp.addEventListener('keydown',function(e){
-        if(!_acOpen) return;
-        const items=$('acL')?.querySelectorAll('li.ac-item')||[];
-        if(!items.length) return;
+    function renderTable() {
+        const c = $('tableContainer'); if (!c) return;
+        const fc = $('filterCount'); if (fc) fc.textContent = filteredOrders.length;
 
-        if(e.key==='ArrowDown'){
-            e.preventDefault();
-            _ai=Math.min(_ai+1,items.length-1);
-            items.forEach((el,i)=>el.classList.toggle('ac-hi',i===_ai));
-            if(items[_ai]) items[_ai].scrollIntoView({block:'nearest'});
-        } else if(e.key==='ArrowUp'){
-            e.preventDefault();
-            _ai=Math.max(_ai-1,0);
-            items.forEach((el,i)=>el.classList.toggle('ac-hi',i===_ai));
-            if(items[_ai]) items[_ai].scrollIntoView({block:'nearest'});
-        } else if(e.key==='Enter' && _ai>=0 && items[_ai]){
-            e.preventDefault();
-            const uid = parseInt(items[_ai].dataset.uid);
-            if(uid) pickUser(uid);
-        } else if(e.key==='Escape'){
-            hideDrop();
+        c.innerHTML = `
+        <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+            <div class="overflow-x-auto">
+                <table class="w-full text-xs">
+                    <thead>
+                        <tr class="bg-[#F9FAFB] border-b border-gray-200">
+                            <th class="text-left px-3 py-2.5 font-semibold text-gray-500 uppercase text-[9px]">Created</th>
+                            <th class="text-left px-3 py-2.5 font-semibold text-gray-500 uppercase text-[9px]">Fleek ID</th>
+                            <th class="text-left px-3 py-2.5 font-semibold text-gray-500 uppercase text-[9px]">Status</th>
+                            <th class="text-left px-3 py-2.5 font-semibold text-gray-500 uppercase text-[9px]">Item</th>
+                            <th class="text-left px-3 py-2.5 font-semibold text-gray-500 uppercase text-[9px]">Category</th>
+                            <th class="text-center px-3 py-2.5 font-semibold text-gray-500 uppercase text-[9px]">Qty</th>
+                            <th class="text-left px-3 py-2.5 font-semibold text-gray-500 uppercase text-[9px]">Vendor</th>
+                            <th class="text-left px-3 py-2.5 font-semibold text-gray-500 uppercase text-[9px]">Zone</th>
+                            <th class="text-center px-3 py-2.5 font-semibold text-gray-500 uppercase text-[9px]">Bargain</th>
+                            <th class="text-left px-3 py-2.5 font-semibold text-gray-500 uppercase text-[9px] min-w-[280px]">Packing Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        ${filteredOrders.length === 0 
+                            ? `<tr><td colspan="10" class="px-4 py-8 text-center text-gray-400 text-sm">No orders in this zone</td></tr>`
+                            : filteredOrders.map((o,i) => row(o, o.fleek_id === searchData?.searched_fleek_id)).join('')}
+                    </tbody>
+                </table>
+            </div>
+            <div class="px-4 py-2.5 bg-[#F9FAFB] border-t border-gray-100 text-[10px] text-gray-400">
+                ${filteredOrders.length} order${filteredOrders.length!==1?'s':''} displayed
+            </div>
+        </div>`;
+    }
+
+    function row(o, isSearched) {
+        const sc = statusCfg(o.latest_status);
+        const fid = esc(o.fleek_id);
+        const ps = o.packing_status || 'Pending';
+        const psc = packingStatusClass(ps);
+        const zc = o.zone_location === 'PK QC Center' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-purple-50 text-purple-700 border-purple-200';
+        
+        return `
+        <tr class="data-row ${isSearched ? 'bg-blue-50/40' : ''}" data-fid="${fid}">
+            <td class="px-3 py-2.5 whitespace-nowrap">
+                ${isSearched ? '<span class="inline-block w-1.5 h-1.5 rounded-full bg-blue-500 mr-1"></span>' : ''}
+                <span class="text-gray-700">${fmtDate(o.created_at)}</span>
+            </td>
+            <td class="px-3 py-2.5">
+                <p class="font-mono font-semibold text-gray-800 text-[11px]">${fid}</p>
+                <p class="text-[9px] text-gray-400">${esc(o.order_number)}</p>
+            </td>
+            <td class="px-3 py-2.5">
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${sc.bg} ${sc.text} border ${sc.border}">
+                    <span class="w-1.5 h-1.5 rounded-full ${sc.dot}"></span>
+                    ${esc(o.latest_status)}
+                </span>
+            </td>
+            <td class="px-3 py-2.5">
+                <p class="text-gray-800 font-medium max-w-[140px] truncate" title="${esc(o.item_name)}">${esc(o.item_name)}</p>
+            </td>
+            <td class="px-3 py-2.5">
+                <p class="text-gray-700">${esc(o.category)}</p>
+                <p class="text-[9px] text-gray-400">${esc(o.product_type)}</p>
+            </td>
+            <td class="px-3 py-2.5 text-center">
+                <span class="inline-flex items-center justify-center w-6 h-6 bg-gray-100 text-gray-800 font-bold rounded text-[11px]">${o.quantity_sold ?? '—'}</span>
+            </td>
+            <td class="px-3 py-2.5">
+                <p class="text-gray-800 font-medium max-w-[100px] truncate">${esc(o.vendor)}</p>
+            </td>
+            <td class="px-3 py-2.5">
+                <span class="inline-flex items-center px-2 py-1 rounded-lg text-[10px] font-semibold border ${zc}">${esc(o.zone_location)}</span>
+            </td>
+            <td class="px-3 py-2.5 text-center">
+                ${o.bargain_bin_flag ? '<span class="inline-flex items-center justify-center w-5 h-5 bg-amber-100 rounded-full border border-amber-200"><svg class="w-3 h-3 text-amber-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></span>' : '<span class="text-gray-300">—</span>'}
+            </td>
+            <td class="px-3 py-2">
+                <div class="flex items-center gap-2">
+                    <select id="status-${fid}" class="status-select flex-1 px-2.5 py-1.5 border rounded-lg text-[11px] font-medium cursor-pointer ${psc}" data-fid="${fid}" onchange="updateSelectStyle(this)">
+                        ${PACKING_STATUSES.map(s => `<option value="${s}" ${s === ps ? 'selected' : ''}>${s}</option>`).join('')}
+                    </select>
+                    <button onclick="saveStatus('${fid}')" id="btn-${fid}" class="px-2.5 py-1.5 bg-gray-900 hover:bg-gray-800 disabled:bg-gray-300 text-white text-[10px] font-semibold rounded-lg flex items-center gap-1">
+                        <svg class="w-3 h-3 ic-save" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                        <svg class="w-3 h-3 ic-load hidden spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                        Save
+                    </button>
+                </div>
+                ${o.marking_updated_at ? `<p class="text-[9px] text-gray-400 mt-1">Updated: ${fmtDateTime(o.marking_updated_at)}</p>` : ''}
+            </td>
+        </tr>`;
+    }
+
+    function updateSelectStyle(sel) {
+        sel.className = sel.className.replace(/status-\w+/g, '').trim();
+        sel.classList.add(packingStatusClass(sel.value));
+    }
+
+    async function saveStatus(fid) {
+        if (saving.has(fid)) return;
+        const sel = document.getElementById(`status-${fid}`);
+        const btn = document.getElementById(`btn-${fid}`);
+        if (!sel || !btn) return;
+
+        saving.add(fid);
+        btn.disabled = true;
+        btn.querySelector('.ic-save').classList.add('hidden');
+        btn.querySelector('.ic-load').classList.remove('hidden');
+
+        try {
+            const res = await fetch(`${API}/marking`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ fleek_id: fid, packing_status: sel.value })
+            });
+            if (!res.ok) throw new Error('Save failed');
+
+            const o = orders.find(x => x.fleek_id === fid);
+            if (o) { o.packing_status = sel.value; o.marking_updated_at = new Date().toISOString(); }
+
+            sel.classList.add('ring-2', 'ring-emerald-400');
+            toast(`Status updated to "${sel.value}"`, 'success');
+            setTimeout(() => sel.classList.remove('ring-2', 'ring-emerald-400'), 1500);
+        } catch (e) {
+            toast(`Failed: ${e.message}`, 'error');
+        } finally {
+            saving.delete(fid);
+            btn.disabled = false;
+            btn.querySelector('.ic-save').classList.remove('hidden');
+            btn.querySelector('.ic-load').classList.add('hidden');
         }
+    }
+
+    function exportCSV() {
+        if (!filteredOrders.length) return toast('No data', 'error');
+        const h = ['created_at','fleek_id','order_number','latest_status','item_name','category','product_type','quantity_sold','vendor','zone_location','bargain_bin_flag','packing_status'];
+        const rows = filteredOrders.map(o => h.map(k => { let v = o[k]; if (v==null) return ''; if (typeof v === 'boolean') return v?'Yes':'No'; v = String(v).replace(/"/g,'""'); return v.includes(',')?`"${v}"`:v; }).join(','));
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([[h.join(','), ...rows].join('\n')], {type:'text/csv'}));
+        a.download = `packing_${currentTab}_${Date.now()}.csv`;
+        a.click();
+        toast('CSV exported', 'success');
+    }
+
+    $('searchForm').addEventListener('submit', e => { 
+        e.preventDefault();
+        const q = $('searchInput').value.trim();
+        if (q) search(q);
+        else clearDashboardSearchState();
+    });
+    $('searchInput').addEventListener('input', e => { 
+        if (!e.target.value.trim()) clearDashboardSearchState();
+    });
+    $('searchInput').addEventListener('keydown', e => { 
+        if (e.key === 'Escape') clearDashboardSearchState();
     });
 
-    // Close dropdown when clicking outside
-    document.addEventListener('mousedown',function(e){
-        const w=$('acW');
-        if(w && !w.contains(e.target)){
-            hideDrop();
+    async function checkHealth() {
+        try {
+            const r = await fetch(`${API}/health`);
+            const d = await r.json();
+            $('statusIndicator').innerHTML = d.ok 
+                ? '<span class="w-2 h-2 rounded-full bg-emerald-500"></span><span>Connected</span>'
+                : '<span class="w-2 h-2 rounded-full bg-amber-500"></span><span>Degraded</span>';
+        } catch {
+            $('statusIndicator').innerHTML = '<span class="w-2 h-2 rounded-full bg-red-500"></span><span>Offline</span>';
         }
-    });
+    }
+    checkHealth(); setInterval(checkHealth, 60000);
 
-    // PIN boxes
-    ['p1','p2','p3','p4'].forEach((id,i,a)=>{const e=$(id);if(!e)return;e.addEventListener('input',()=>{e.value=e.value.replace(/\D/g,'').slice(0,1);if(e.value&&a[i+1])$(a[i+1])?.focus();if(gP().length===4)$('lF')?.requestSubmit()});e.addEventListener('keydown',ev=>{if(ev.key==='Backspace'&&!e.value&&a[i-1])$(a[i-1])?.focus()})});
-    $('lF')?.addEventListener('submit',doL);
-    $('rF')?.addEventListener('submit',doR);
+    function updateClock() { $('clock').textContent = new Date().toLocaleString('en-GB', {weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}); }
+    updateClock(); setInterval(updateClock, 30000);
 
-    // Session restore
-    const sv=sessionStorage.getItem('bs_u');
-    if(sv){try{const u=JSON.parse(sv);if(U.find(x=>x.id===u.id))aOk(u,true)}catch(e){sessionStorage.removeItem('bs_u')}}
-}
-
-function gP(){return['p1','p2','p3','p4'].map(id=>$(id)?.value||'').join('')}
-function cP(){['p1','p2','p3','p4'].forEach(id=>{const e=$(id);if(e){e.value='';e.classList.remove('err')}})}
-function doL(e){e.preventDefault();let uid=parseInt($('acV')?.value),pin=gP();if(!uid){const m=syncTypedUser();uid=m?.id}if(!uid||pin.length!==4)return;const u=U.find(x=>x.id===uid);if(!u)return;$('lB').disabled=true;$('lT').textContent='Signing in...';$('lSp')?.classList.remove('hidden');$('pE')?.classList.add('hidden');setTimeout(()=>{if(u.pin===pin){aOk(u,false)}else{['p1','p2','p3','p4'].forEach(id=>$(id)?.classList.add('err'));$('pR')?.classList.add('pks');$('pE')?.classList.remove('hidden');setTimeout(()=>{cP();$('pR')?.classList.remove('pks');$('p1')?.focus()},500)}$('lB').disabled=false;$('lT').textContent='Sign In';$('lSp')?.classList.add('hidden')},1e3)}
-function aOk(u,r){cu=u;sessionStorage.setItem('bs_u',JSON.stringify(u));if(!r)pL(`${u.name} logged in`);$('aw')?.classList.add('off');$('uP')?.classList.remove('hidden');$('sbU')?.classList.remove('hidden');$('uA').textContent=$('sbAv').textContent=u.name[0].toUpperCase();$('uN').textContent=u.name.split(' ')[0];$('sbNm').textContent=u.name;$('sbRl').textContent=u.role;if(u.role==='Admin')$('sbAd').style.display='flex';if(u.role==='Admin'||u.role==='Manager')$('sbLg').style.display='flex'}
-function logout(){if(cu)pL(`${cu.name} logged out`);cu=null;sessionStorage.removeItem('bs_u');cP();$('acI').value='';$('acV').value='';$('pS').style.opacity='.4';$('pS').style.pointerEvents='none';$('lB').disabled=true;$('aw')?.classList.remove('off');$('uP')?.classList.add('hidden');$('sbU')?.classList.add('hidden');$('sbAd').style.display='none';$('sbLg').style.display='none';hideDrop()}
-function authTog(){$('lC')?.classList.toggle('hidden');$('rC')?.classList.toggle('hidden');$('rO')?.classList.add('hidden')}
-function doR(e){e.preventDefault();const n=$('rN')?.value?.trim();if(!n||n.length<3)return;if(U.some(u=>u.name.toLowerCase()===n.toLowerCase())){toast('Exists','error');return}pend.push({name:n});pL(`Reg request: "${n}"`);$('rN').value='';$('rO')?.classList.remove('hidden')}
-
-function openAdm(){if(!cu||(cu.role!=='Admin'&&cu.role!=='Manager'))return;$('adM')?.classList.remove('hidden');if(cu.role==='Manager'){aTab('logs')}else{aTab('pend')}}
-function closeAdm(){closePinResetModal();$('adM')?.classList.add('hidden')}
-function aTab(t){const tabs={pend:'aTP',team:'aTT',logs:'aTL'};const panels={pend:'aP',team:'aT',logs:'aL'};Object.values(tabs).forEach(id=>{const el=$(id);if(el){el.classList.remove('on');el.style.display=''}});Object.values(panels).forEach(id=>$(id)?.classList.add('hidden'));const activeTab=$(tabs[t]);if(activeTab){activeTab.classList.add('on')}const activePanel=$(panels[t]);if(activePanel){activePanel.classList.remove('hidden')}if(cu?.role==='Manager'){$('aTP').style.display='none';$('aTT').style.display='none'}rAdm()}
-function rAdm(){rPend();rTeam();rLogs()}
-function rPend(){const e=$('aP');if(!e)return;if(!pend.length){e.innerHTML='<p class="text-center py-8 text-sm" style="color:var(--t3)">No pending requests</p>';return}e.innerHTML=pend.map((r,i)=>`<div class="mr"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg flex items-center justify-center text-[12px] font-bold" style="background:rgba(245,158,11,.15);color:#f59e0b">${r.name[0].toUpperCase()}</div><span class="text-[13px] font-semibold" style="color:var(--t1)">${esc(r.name)}</span></div><div class="flex gap-2"><button onclick="appR(${i})" class="px-3 py-1.5 bg-emerald-600 text-white text-[11px] font-semibold rounded-lg border-none cursor-pointer">Approve</button><button onclick="rejR(${i})" class="px-3 py-1.5 text-[11px] rounded-lg cursor-pointer" style="background:var(--s);border:1px solid var(--b);color:var(--t2)">Reject</button></div></div>`).join('')}
-function rTeam(){const e=$('aT');if(!e)return;e.innerHTML=U.map(u=>{const av=u.role==='Admin'?'bg-gray-900 text-white':u.role==='Manager'?'bg-blue-500 text-white':'bg-gray-300 text-gray-700';return`<div class="mr"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg flex items-center justify-center text-[12px] font-bold ${av}">${u.name[0].toUpperCase()}</div><div><div class="text-[13px] font-semibold" style="color:var(--t1)">${esc(u.name)}${u.id===cu?.id?' <span style="color:var(--t3)">(You)</span>':''}</div><div class="text-[11px]" style="color:var(--t2)">${u.role} · PIN: ${u.pin}</div></div></div><button onclick="showPinResetModal('${esc(u.name)}')" class="px-3 py-1.5 text-[11px] font-semibold rounded-lg cursor-pointer" style="background:var(--s);border:1px solid var(--b);color:var(--t2)">Reset PIN</button></div>`}).join('')}
-function rLogs(){const e=$('aL');if(!e)return;if(!logs.length){e.innerHTML='<p class="text-center py-8 text-sm" style="color:var(--t3)">No activity</p>';return}e.innerHTML=logs.map(l=>`<div class="le"><span class="ltt">${l.time}</span><span style="color:var(--t2)">${esc(l.message)}</span></div>`).join('')}
-function appR(i){if(cu?.role!=='Admin')return;const r=pend[i];if(!r)return;U.push({id:U.length+1,name:r.name,role:'Employee',pin:'1234'});pL(`${cu.name} approved ${r.name}`);pend.splice(i,1);rAdm();toast(`${r.name} approved`,'success')}
-function rejR(i){if(cu?.role!=='Admin')return;pL(`${cu.name} rejected ${pend[i]?.name}`);pend.splice(i,1);rAdm()}
-
-let userForPinReset=null;
-function showPinResetModal(username){if(cu?.role!=='Admin'){toast('Admin only','error');return}userForPinReset=username;$('prNm').textContent=username;$('prErr')?.classList.add('hidden');const boxes=$('prRow').querySelectorAll('input[data-pr]');boxes.forEach((box,i)=>{box.value='';box.classList.remove('err');box.oninput=()=>{box.value=box.value.replace(/\D/g,'').slice(0,1);box.classList.remove('err');$('prErr')?.classList.add('hidden');if(box.value&&boxes[i+1])boxes[i+1].focus()};box.onkeydown=(e)=>{if(e.key==='Backspace'&&!box.value&&boxes[i-1]){e.preventDefault();boxes[i-1].value='';boxes[i-1].focus()}if(e.key==='ArrowLeft'&&boxes[i-1])boxes[i-1].focus();if(e.key==='ArrowRight'&&boxes[i+1])boxes[i+1].focus();if(e.key==='Enter'){e.preventDefault();saveNewPin()}if(e.key==='Escape')closePinResetModal()};box.onfocus=()=>box.select()});const ov=$('prOv');if(ov)ov.style.display='flex';setTimeout(()=>boxes[0]?.focus(),80)}
-function closePinResetModal(){userForPinReset=null;const boxes=$('prRow')?.querySelectorAll('input[data-pr]')||[];boxes.forEach(box=>{box.value='';box.classList.remove('err');box.oninput=null;box.onkeydown=null;box.onfocus=null});$('prErr')?.classList.add('hidden');const ov=$('prOv');if(ov)ov.style.display='none'}
-function saveNewPin(){if(cu?.role!=='Admin'||!userForPinReset)return;const boxes=$('prRow').querySelectorAll('input[data-pr]');const newPin=Array.from(boxes).map(b=>b.value).join('');if(newPin.length!==4||!/^\d{4}$/.test(newPin)){boxes.forEach(b=>{if(!b.value||!/^\d$/.test(b.value))b.classList.add('err')});$('prRow')?.classList.add('pks');$('prErr')?.classList.remove('hidden');setTimeout(()=>$('prRow')?.classList.remove('pks'),400);return}const targetUser=U.find(u=>u.name===userForPinReset);if(targetUser){targetUser.pin=newPin;pL(`${cu.name} changed PIN for ${targetUser.name}`);toast(`PIN updated for ${targetUser.name}`,'success')}else{toast('User not found','error')}closePinResetModal();rAdm()}
-
-function normalizeSearch(q){return q.trim().toUpperCase().replace(/[\/\\_\-\s]+/g,'')}
-function matchesQuery(fieldValue,normalizedQuery){if(!fieldValue)return false;const normalized=String(fieldValue).toUpperCase().replace(/[\/\\_\-\s]+/g,'');return normalized.includes(normalizedQuery)||normalizedQuery.includes(normalized)}
-
-async function mAPI(q){await new Promise(r=>setTimeout(r,500));const nq=normalizeSearch(q);if(!nq)throw new Error('Enter a search term');const allOrders=Object.values(MK.orders);let matchedOrder=allOrders.find(o=>matchesQuery(o.fleek_id,nq)||matchesQuery(o.order_number,nq));if(!matchedOrder){const buyerMatch=Object.keys(bM).find(cid=>{const bid=bM[cid];return bid&&normalizeSearch(bid)===nq});if(buyerMatch){matchedOrder=allOrders.find(o=>o.customer_id===buyerMatch)}}if(!matchedOrder)throw new Error(`"${q}" not found`);const buyerId=matchedOrder.customer_id;const buyerOrders=allOrders.filter(o=>o.customer_id===buyerId);buyerOrders.sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));return{customer_id:buyerId,customer_country:matchedOrder.customer_country,searched_fleek_id:matchedOrder.fleek_id,orders:buyerOrders.map(o=>({...o})),summary:{total:buyerOrders.length,qty:buyerOrders.reduce((s,o)=>s+(o.quantity_sold||0),0),vendors:[...new Set(buyerOrders.map(o=>o.vendor))].length,complete:buyerOrders.filter(o=>o.packing_status==='Complete').length}}}
-async function mSave(fid,st){await new Promise(r=>setTimeout(r,300));if(MK.orders[fid]){MK.orders[fid].packing_status=st;MK.orders[fid].marking_updated_at=new Date().toISOString()}}
-function sL(){$('emp')?.classList.add('hidden');$('er')?.classList.add('hidden');$('res')?.classList.add('hidden');$('ld')?.classList.remove('hidden')}
-function hL(){$('ld')?.classList.add('hidden')}
-function sE(t,m){hL();$('emp')?.classList.add('hidden');$('res')?.classList.add('hidden');$('er')?.classList.remove('hidden');$('eT').textContent=t;$('eM').textContent=m}
-function sKV(v){$('kpi')?.classList.toggle('hidden',!v)}
-function clrS(){$('sI').value='';$('res')?.classList.add('hidden');$('er')?.classList.add('hidden');$('ld')?.classList.add('hidden');$('emp')?.classList.remove('hidden');sKV(true)}
-async function search(q){goScr('dash');sL();rB();try{const d=await mAPI(q);sD=d;orders=d.orders;orders.forEach(o=>gB(o.customer_id));cTab='all';aF();render(d);uKPI();sKV(false);pL(`${cu?.name||'?'} searched "${q}"`)}catch(e){sKV(true);sE('Not Found',e.message)}}
-function aF(){if(cTab==='all')fO=[...orders];else if(cTab==='pk_qc_center')fO=orders.filter(o=>o.zone_location==='PK QC Center');else if(cTab==='pk_zone')fO=orders.filter(o=>o.zone_location==='PK Zone')}
-function uKPI(){const tp=orders.filter(o=>o.packing_status!=='Complete').length,qc=orders.filter(o=>o.zone_location==='PK QC Center').length,zn=orders.filter(o=>o.zone_location==='PK Zone').length,sl=orders.filter(o=>o.packing_status==='Hold for bundling'&&age(o.created_at)>3).length;$('k1').textContent=tp;$('k2').textContent=qc;$('k3').textContent=zn;$('k4').textContent=sl;$('sbQ').textContent=qc;$('sbZ').textContent=zn;$('qcB').textContent=qc;$('znB').textContent=zn;$('kS').style.borderColor=sl>0?'rgba(239,68,68,.4)':'var(--b)'}
-
-function render(d){hL();$('emp')?.classList.add('hidden');$('er')?.classList.add('hidden');$('res')?.classList.remove('hidden');const s=d.summary;
-$('res').innerHTML=`<div class="fin"><div class="mb-5 p-4 rounded-2xl" style="background:var(--s);border:1px solid var(--b)"><div class="flex flex-wrap items-start justify-between gap-3"><div><h3 class="text-sm font-semibold" style="color:var(--t1)">Consolidation Report</h3><p class="text-[11px] mt-1" style="color:var(--t3)">Customer: <b style="color:var(--t1)">${esc(d.customer_id)}</b> · ${esc(d.customer_country)}</p></div></div>
-<div class="grid grid-cols-4 gap-2 mt-4">${[['Orders',s.total],['Qty',s.qty],['Vendors',s.vendors],['Done',s.complete]].map(([l,v])=>`<div class="px-3 py-2 rounded-xl" style="background:var(--c);border:1px solid var(--b)"><p class="text-[9px] font-semibold uppercase" style="color:var(--t3)">${l}</p><p class="text-lg font-bold" style="color:var(--t1)">${v||0}</p></div>`).join('')}</div></div>
-<div id="tC"></div></div>`;rT()}
-
-function rT(){const c=$('tC');if(!c)return;
-const bg={};fO.forEach(o=>{const b=gB(o.customer_id);if(!bg[b])bg[b]=[];bg[b].push(o.fleek_id)});const bc={};let ci=0;Object.keys(bg).forEach(b=>{if(bg[b].length>1){bc[b]=ci%2;ci++}});
-const sorted=[...fO].sort((a,b)=>{const ba=gB(a.customer_id),bb=gB(b.customer_id);return ba!==bb?ba.localeCompare(bb):new Date(a.created_at)-new Date(b.created_at)});
-c.innerHTML=`
-<div class="bulk-bar"><input type="checkbox" class="chk" id="selAll" onchange="togAll(this.checked)"><span class="text-[11px] font-semibold" style="color:var(--t3)">Select All</span><select id="bulkSel" class="ssel px-3 py-1.5 rounded-lg text-[11px]">${ST.map(s=>`<option value="${s}">${s}</option>`).join('')}</select><button onclick="bulkApply()" class="btn" style="width:auto;padding:6px 16px;font-size:11px">Apply</button><span id="selCnt" class="text-[10px]" style="color:var(--t3)">0 selected</span></div>
-<div class="tw"><div class="overflow-x-auto"><table class="w-full text-xs"><thead><tr class="th">
-<th class="px-3 py-2.5 text-center w-10"><input type="checkbox" class="chk" onchange="togAll(this.checked)"></th>
-<th class="text-left px-3 py-2.5 font-semibold uppercase text-[9px]">Buyer</th><th class="text-left px-3 py-2.5 font-semibold uppercase text-[9px]">Created</th><th class="text-left px-3 py-2.5 font-semibold uppercase text-[9px]">Fleek ID</th><th class="text-left px-3 py-2.5 font-semibold uppercase text-[9px]">Status</th><th class="text-left px-3 py-2.5 font-semibold uppercase text-[9px]">Item</th><th class="text-center px-3 py-2.5 font-semibold uppercase text-[9px]">Qty</th><th class="text-left px-3 py-2.5 font-semibold uppercase text-[9px]">Zone</th><th class="text-left px-3 py-2.5 font-semibold uppercase text-[9px] min-w-[240px]">Packing</th></tr></thead>
-<tbody style="border-color:var(--b)">${sorted.length===0?'<tr><td colspan="9" class="px-4 py-8 text-center" style="color:var(--t3)">No orders</td></tr>':sorted.map(o=>{
-const bid=gB(o.customer_id),gs=bg[bid].length,isF=bg[bid][0]===o.fleek_id,str=bc[bid]!==undefined?'bs'+bc[bid]:'bsn';
-const st=o.packing_status||'Pending',ag=age(o.created_at),isSla=st==='Hold for bundling'&&ag>3,cfg=scf(o.latest_status);
-return`<tr class="dr ${str} ${isSla?'sla slap':''}" data-fid="${esc(o.fleek_id)}" data-buyer="${bid}">
-<td class="px-3 py-2.5 text-center"><input type="checkbox" class="chk order-chk" data-fid="${esc(o.fleek_id)}" onchange="updCnt()"></td>
-<td class="px-3 py-2.5 align-top"><span class="inline-block px-2 py-0.5 rounded-md text-[11px] font-bold" style="background:var(--s);border:1px solid var(--b);color:var(--t1)">${bid}</span>${gs>1&&isF?`<span class="block mt-1 px-1.5 py-0.5 rounded text-[9px] font-bold" style="background:rgba(99,102,241,.1);color:#818cf8;border:1px solid rgba(99,102,241,.2)">📦 Bundle (${gs})</span>`:''}</td>
-<td class="px-3 py-2.5 whitespace-nowrap"><span style="color:var(--t1)">${fd(o.created_at)}</span>${isSla?`<p class="text-[9px] font-bold mt-0.5" style="color:#ef4444">${ag}d held</p>`:''}</td>
-<td class="px-3 py-2.5"><p class="font-mono font-semibold text-[11px]" style="color:var(--t1)">${esc(o.fleek_id)}</p><p class="text-[9px]" style="color:var(--t3)">${esc(o.order_number)}</p></td>
-<td class="px-3 py-2.5"><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style="background:${cfg.bg};color:${cfg.c};border:1px solid ${cfg.bc}"><span class="w-1.5 h-1.5 rounded-full" style="background:${cfg.c}"></span>${esc(o.latest_status)}</span>${isSla?'<span class="block mt-1 text-[9px] font-bold" style="color:#ef4444">⚠ SLA Breach</span>':''}</td>
-<td class="px-3 py-2.5"><p class="font-medium truncate max-w-[130px]" style="color:var(--t1)">${esc(o.item_name)}</p><p class="text-[9px]" style="color:var(--t3)">${esc(o.category)}</p></td>
-<td class="px-3 py-2.5 text-center"><span class="inline-flex items-center justify-center w-6 h-6 rounded font-bold text-[11px]" style="background:var(--s);color:var(--t1)">${o.quantity_sold??'—'}</span></td>
-<td class="px-3 py-2.5"><span class="px-2 py-1 rounded-lg text-[10px] font-semibold" style="background:${o.zone_location==='PK QC Center'?'rgba(59,130,246,.1)':'rgba(139,92,246,.1)'};color:${o.zone_location==='PK QC Center'?'#60a5fa':'#a78bfa'};border:1px solid ${o.zone_location==='PK QC Center'?'rgba(59,130,246,.2)':'rgba(139,92,246,.2)'}">${esc(o.zone_location)}</span></td>
-<td class="px-3 py-2"><div class="flex items-center gap-2"><select id="st-${esc(o.fleek_id)}" class="ssel flex-1 px-2.5 py-1.5 rounded-lg cursor-pointer ${pC(st)}" onchange="uSel(this)">${ST.map(s=>`<option value="${s}"${s===st?' selected':''}>${s}</option>`).join('')}</select><button onclick="saveSt('${esc(o.fleek_id)}')" id="b-${esc(o.fleek_id)}" class="btn" style="width:auto;padding:6px 12px;font-size:10px"><svg class="w-3 h-3 _s" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg><svg class="w-3 h-3 _l hidden spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>Save</button></div></td></tr>`}).join('')}</tbody></table></div>
-<div class="tf px-4 py-2 flex justify-between text-[10px]"><span>${sorted.length} order${sorted.length!==1?'s':''}</span><span>5-day consolidation</span></div></div>`}
-
-function uSel(s){s.className='ssel flex-1 px-2.5 py-1.5 rounded-lg cursor-pointer '+pC(s.value)}
-async function saveSt(fid){if(saving.has(fid))return;const sel=$('st-'+fid)||$('zst-'+fid);const btn=$('b-'+fid)||$('zb-'+fid);if(!sel||!btn)return;saving.add(fid);btn.disabled=true;btn.querySelector('._s')?.classList.add('hidden');btn.querySelector('._l')?.classList.remove('hidden');try{const ns=sel.value;await mSave(fid,ns);const o=orders.find(x=>x.fleek_id===fid);if(o){o.packing_status=ns;o.marking_updated_at=new Date().toISOString()}toast(`"${ns}"`,'success');pL(`${cu?.name||'?'} → ${fid} = "${ns}"`);uKPI();if(cScr==='qc')zoneStatusFilter('qc',qcStatusFilter);if(cScr==='zone')zoneStatusFilter('zone',znStatusFilter);if(ns==='Complete'&&o){const bo=orders.filter(x=>x.customer_id===o.customer_id);setTimeout(()=>showSl(o,bo),600)}}catch(e){toast(e.message,'error')}finally{saving.delete(fid);btn.disabled=false;btn.querySelector('._s')?.classList.remove('hidden');btn.querySelector('._l')?.classList.add('hidden')}}
-
-function togAll(c){document.querySelectorAll('.order-chk').forEach(cb=>{cb.checked=c});const sa=$('selAll');if(sa)sa.checked=c;updCnt()}
-function updCnt(){const n=document.querySelectorAll('.order-chk:checked').length;const e=$('selCnt');if(e)e.textContent=n+' selected'}
-async function bulkApply(){const ns=$('bulkSel')?.value;const cbs=[...document.querySelectorAll('.order-chk:checked')];if(!ns)return;if(!cbs.length){toast('None selected','error');return}for(const cb of cbs){const fid=cb.dataset.fid;const o=orders.find(x=>x.fleek_id===fid);if(!o)continue;o.packing_status=ns;o.marking_updated_at=new Date().toISOString();await mSave(fid,ns);pL(`${cu?.name||'?'} bulk → ${fid} = "${ns}"`)}toast(`${cbs.length} updated to "${ns}"`,'success');uKPI();cTab='all';aF();rT()}
-
-let qcStatusFilter='all';let znStatusFilter='all';
-function zoneStatusFilter(zone,status){if(zone==='qc')qcStatusFilter=status;else znStatusFilter=status;const containerId=zone==='qc'?'qcFilters':'znFilters';const container=$(containerId);if(container){container.querySelectorAll('.zf-btn').forEach(btn=>{btn.classList.toggle('zf-on',btn.dataset.zf===status)})}const zoneName=zone==='qc'?'PK QC Center':'PK Zone';const activeFilter=zone==='qc'?qcStatusFilter:znStatusFilter;const zoneOrders=orders.filter(o=>o.zone_location===zoneName);const filtered=activeFilter==='all'?zoneOrders:zoneOrders.filter(o=>(o.packing_status||'Pending')===activeFilter);const cid=zone==='qc'?'qcC':'znC';renderZoneFiltered(cid,filtered);const bdg=zone==='qc'?$('qcB'):$('znB');if(bdg)bdg.textContent=filtered.length}
-
-function renderZoneFiltered(cid,list){const c=$(cid);if(!c)return;if(!list.length){c.innerHTML=`<div class="text-center py-16 rounded-2xl" style="background:var(--s);border:1px solid var(--b)"><p class="text-sm" style="color:var(--t3)">No orders in this filter</p></div>`;return}
-const bg={};list.forEach(o=>{const b=gB(o.customer_id);if(!bg[b])bg[b]=[];bg[b].push(o.fleek_id)});const bc={};let ci=0;Object.keys(bg).forEach(b=>{if(bg[b].length>1){bc[b]=ci%2;ci++}});const sorted=[...list].sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
-c.innerHTML=`<div class="tw"><div class="overflow-x-auto"><table class="w-full text-xs"><thead><tr class="th">
-<th class="text-left px-3 py-2.5 font-semibold uppercase text-[9px]">Buyer</th>
-<th class="text-left px-3 py-2.5 font-semibold uppercase text-[9px]">Created</th>
-<th class="text-left px-3 py-2.5 font-semibold uppercase text-[9px]">Fleek ID</th>
-<th class="text-left px-3 py-2.5 font-semibold uppercase text-[9px]">Status</th>
-<th class="text-left px-3 py-2.5 font-semibold uppercase text-[9px]">Item</th>
-<th class="text-center px-3 py-2.5 font-semibold uppercase text-[9px]">Qty</th>
-<th class="text-left px-3 py-2.5 font-semibold uppercase text-[9px] min-w-[240px]">Packing</th>
-</tr></thead><tbody style="border-color:var(--b)">${sorted.map(o=>{
-const bid=gB(o.customer_id),gs=bg[bid].length,isF=bg[bid][0]===o.fleek_id;
-const str=bc[bid]!==undefined?'bs'+bc[bid]:'bsn';
-const st=o.packing_status||'Pending',ag=age(o.created_at);
-const isSla=st==='Hold for bundling'&&ag>3,cfg=scf(o.latest_status);
-return`<tr class="dr ${str} ${isSla?'sla slap':''}" data-fid="${esc(o.fleek_id)}" data-buyer="${bid}">
-<td class="px-3 py-2.5 align-top"><span class="inline-block px-2 py-0.5 rounded-md text-[11px] font-bold" style="background:var(--s);border:1px solid var(--b);color:var(--t1)">${bid}</span>${gs>1&&isF?`<span class="block mt-1 px-1.5 py-0.5 rounded text-[9px] font-bold" style="background:rgba(99,102,241,.1);color:#818cf8;border:1px solid rgba(99,102,241,.2)">📦 Bundle (${gs})</span>`:''}</td>
-<td class="px-3 py-2.5 whitespace-nowrap"><span style="color:var(--t1)">${fd(o.created_at)}</span>${isSla?`<p class="text-[9px] font-bold mt-0.5" style="color:#ef4444">${ag}d held</p>`:''}</td>
-<td class="px-3 py-2.5"><p class="font-mono font-semibold text-[11px]" style="color:var(--t1)">${esc(o.fleek_id)}</p><p class="text-[9px]" style="color:var(--t3)">${esc(o.order_number)}</p></td>
-<td class="px-3 py-2.5"><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style="background:${cfg.bg};color:${cfg.c};border:1px solid ${cfg.bc}"><span class="w-1.5 h-1.5 rounded-full" style="background:${cfg.c}"></span>${esc(o.latest_status)}</span>${isSla?'<span class="block mt-1 text-[9px] font-bold" style="color:#ef4444">⚠ SLA Breach</span>':''}</td>
-<td class="px-3 py-2.5"><p class="font-medium truncate max-w-[130px]" style="color:var(--t1)">${esc(o.item_name)}</p><p class="text-[9px]" style="color:var(--t3)">${esc(o.category)}</p></td>
-<td class="px-3 py-2.5 text-center"><span class="inline-flex items-center justify-center w-6 h-6 rounded font-bold text-[11px]" style="background:var(--s);color:var(--t1)">${o.quantity_sold??'—'}</span></td>
-<td class="px-3 py-2"><div class="flex items-center gap-2"><select id="zst-${esc(o.fleek_id)}" class="ssel flex-1 px-2.5 py-1.5 rounded-lg cursor-pointer ${pC(st)}" onchange="uSel(this)">${ST.map(s=>`<option value="${s}"${s===st?' selected':''}>${s}</option>`).join('')}</select><button onclick="saveSt('${esc(o.fleek_id)}')" id="zb-${esc(o.fleek_id)}" class="btn" style="width:auto;padding:6px 12px;font-size:10px"><svg class="w-3 h-3 _s" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg><svg class="w-3 h-3 _l hidden spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>Save</button></div></td>
-</tr>`}).join('')}</tbody></table></div>
-<div class="tf px-4 py-2 flex justify-between text-[10px]"><span>${sorted.length} order${sorted.length!==1?'s':''}</span><span>Filtered view</span></div></div>`}
-
-function rZT(cid,list){const zone=cid==='qcC'?'qc':'zone';const activeFilter=zone==='qc'?qcStatusFilter:znStatusFilter;const filtered=activeFilter==='all'?list:list.filter(o=>(o.packing_status||'Pending')===activeFilter);renderZoneFiltered(cid,filtered);const bdg=zone==='qc'?$('qcB'):$('znB');if(bdg)bdg.textContent=filtered.length}
-function fLoc(z){const inp=z==='qc'?$('qcS'):$('znS');const cid=z==='qc'?'qcC':'znC';const raw=(inp?.value||'').trim();const c=$(cid);if(!c)return;const nq=raw.toLowerCase().replace(/[\/\\_\-\s]+/g,'');const rows=c.querySelectorAll('tr[data-fid]');let vis=0;rows.forEach(r=>{if(!nq){r.style.display='';vis++;return}const fid=(r.dataset.fid||'').toLowerCase().replace(/[\/\\_\-\s]+/g,'');const bid=(r.dataset.buyer||'').toLowerCase().replace(/[\/\\_\-\s]+/g,'');const txt=(r.textContent||'').toLowerCase().replace(/[\/\\_\-\s]+/g,'');const show=fid.includes(nq)||bid.includes(nq)||txt.includes(nq);r.style.display=show?'':'none';if(show)vis++});const b=z==='qc'?$('qcB'):$('znB');if(b)b.textContent=vis}
-
-function showSl(t,b){const mo=$('slM'),body=$('slB');if(!mo||!body)return;const bid=gB(t.customer_id),tq=b.reduce((s,o)=>s+(o.quantity_sold||0),0),cc=b.filter(o=>o.packing_status==='Complete').length;
-body.innerHTML=`<div style="text-align:center;border-bottom:2px solid var(--t1);padding-bottom:12px;margin-bottom:16px"><h1 style="font-size:18px;font-weight:700;color:var(--t1)">BundleSync</h1><p style="font-size:11px;color:var(--t3)">Packing Slip</p></div>
-<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--t2);margin-bottom:14px;padding-bottom:10px;border-bottom:1px dashed var(--b)"><div><b>Buyer:</b> ${bid}</div><div><b>Country:</b> ${esc(t.customer_country)}</div></div>
-<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px">${b.map((o,i)=>`<tr style="border-bottom:1px solid var(--b)"><td style="padding:6px">${i+1}</td><td style="padding:6px;font-weight:600;font-family:monospace">${esc(o.fleek_id)}</td><td style="padding:6px">${esc(o.item_name)}</td><td style="padding:6px;text-align:center;font-weight:700">${o.quantity_sold||0}</td><td style="padding:6px;font-weight:600;color:${o.packing_status==='Complete'?'#059669':'var(--t3)'}">${esc(o.packing_status)}</td></tr>`).join('')}</table>
-<div style="background:var(--s);border:1px solid var(--b);border-radius:8px;padding:12px;font-size:12px"><b>Total:</b> ${tq} items · <b>Complete:</b> ${cc}/${b.length} · <span style="font-size:10px;color:var(--t3)">By: ${esc(cu?.name)}</span></div>`;
-$('ps').innerHTML=body.innerHTML;mo.classList.remove('hidden')}
-function closeSl(){$('slM')?.classList.add('hidden')}
-
-$('sF').addEventListener('submit',e=>{e.preventDefault();const q=$('sI').value.trim();if(q)search(q);else clrS()});
-$('sI').addEventListener('input',e=>{if(!e.target.value.trim())clrS()});
-$('sI').addEventListener('keydown',e=>{if(e.key==='Escape')clrS()});
-function uClk(){$('clk').textContent=new Date().toLocaleString('en-GB',{weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}uClk();setInterval(uClk,3e4);
-
-// Init
-initA();
-
-const _w=setInterval(()=>{if(cu){clearInterval(_w);$('sI').value='FLK-001';setTimeout(()=>$('sF')?.dispatchEvent(new Event('submit')),300)}},400);
-</script>
+    $('searchInput').focus();
+    </script>
 </body>
 </html>
