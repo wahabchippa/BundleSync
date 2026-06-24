@@ -44,6 +44,7 @@ const COLUMN_MAP = {
   quantity_sold: 87,      // Column CJ
   bargain_bin_flag: 88,   // Column CK
   category: 89,           // Column CL
+  customer_name: 65,      // Column BN
   zone_location: 94,      // Column CQ (QC or zone)
 };
 
@@ -162,6 +163,7 @@ function extractRowData(row) {
     is_zone_vendor: parseBoolean(row[COLUMN_MAP.is_zone_vendor]),
     qc_exclusion_type: get('qc_exclusion_type'),
     bargain_bin_flag: parseBoolean(row[COLUMN_MAP.bargain_bin_flag]),
+    customer_name: get('customer_name'),
     zone_location: get('zone_location'),
   };
 }
