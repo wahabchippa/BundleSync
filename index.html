@@ -41,19 +41,19 @@ body{background:var(--bg);color:var(--t1);transition:background .3s,color .3s;ma
 [data-theme="dark"] .ua{background:#fafafa;color:#111}
 
 @keyframes cp{0%,100%{box-shadow:0 0 0 0 transparent}50%{box-shadow:0 0 0 6px rgba(99,102,241,.15)}}.cpulse{animation:cp .6s ease}
-.cs{max-width:520px;margin:0 auto;position:relative}
-.cs input{width:100%;padding:14px 80px 14px 46px;font-size:14px;font-weight:500;background:var(--i);border:1.5px solid var(--b);border-radius:14px;color:var(--t1);transition:all .2s}
-.cs input:focus{outline:none;border-color:var(--t1);box-shadow:0 0 0 3px rgba(255,255,255,.05)}.cs input::placeholder{color:var(--t3)}
+.cs{max-width:640px;margin:0 auto;position:relative;transition:transform .3s cubic-bezier(.16,1,.3,1)}.cs:focus-within{transform:scale(1.02)}.cs::before{content:"";position:absolute;inset:-2px;border-radius:18px;background:linear-gradient(135deg,#3b82f6,#8b5cf6,#ec4899);opacity:0;transition:opacity .4s;z-index:-1;filter:blur(8px)}.cs:focus-within::before{opacity:0.4}
+.cs input{width:100%;padding:18px 90px 18px 52px;font-size:15px;font-weight:500;background:var(--c);border:1.5px solid var(--b);border-radius:16px;color:var(--t1);transition:all .3s cubic-bezier(.16,1,.3,1);box-shadow:0 2px 8px rgba(0,0,0,0.02)}
+.cs input:focus{outline:none;border-color:var(--t1);box-shadow:0 8px 32px rgba(99,102,241,0.12),0 0 0 4px rgba(99,102,241,0.08)}.cs input::placeholder{color:var(--t3);transition:opacity .2s}.cs input:focus::placeholder{opacity:0.5}
 .ck{position:absolute;right:14px;top:50%;transform:translateY(-50%);display:flex;gap:3px;pointer-events:none}
-.ck kbd{padding:3px 6px;font-size:10px;font-weight:600;color:var(--t3);background:var(--c);border:1px solid var(--b);border-radius:5px;font-family:monospace}
+.ck kbd{padding:4px 8px;font-size:10px;font-weight:700;color:var(--t2);background:var(--s);border:1px solid var(--b);border-bottom:2px solid var(--b);border-radius:6px;font-family:ui-monospace,monospace;letter-spacing:0.5px;transition:all .2s}.cs:focus-within .ck kbd{background:var(--c);border-color:var(--t4)}
 .ls{position:relative}.ls input{width:100%;padding:10px 12px 10px 36px;font-size:12px;background:var(--i);border:1.5px solid var(--b);border-radius:12px;color:var(--t1);transition:all .2s}
 .ls input:focus{outline:none;border-color:var(--t1)}.ls input::placeholder{color:var(--t3)}
 
-.mc{background:var(--c);border:1px solid var(--b);border-radius:18px;padding:20px 24px;transition:all .3s;cursor:pointer;overflow:hidden}
-.mc:hover{border-color:var(--t4);box-shadow:0 8px 24px var(--sh);transform:translateY(-2px)}
-.mc .mv{font-size:32px;font-weight:700;letter-spacing:-.03em;color:var(--t1)}.mc .ml{font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
-.mc .ms{font-size:11px;color:var(--t3);margin-top:6px}
-.mi{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.mc{background:var(--c);border:1px solid var(--b);border-radius:20px;padding:24px 28px;transition:all .4s cubic-bezier(.16,1,.3,1);cursor:pointer;overflow:hidden;position:relative;min-height:140px}.mc::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,currentColor,transparent);opacity:0;transition:opacity .4s}.mc:hover::before{opacity:0.6}
+.mc:hover{border-color:var(--t4);box-shadow:0 16px 40px var(--sh),0 4px 12px rgba(0,0,0,0.04);transform:translateY(-4px) scale(1.01)}
+.mc .mv{font-size:44px;font-weight:800;letter-spacing:-.04em;color:var(--t1);line-height:1;background:linear-gradient(135deg,var(--t1) 0%,var(--t2) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:fadeInUp .5s ease-out}.mc .ml{font-size:12px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px}
+.mc .ms{font-size:11px;color:var(--t3);margin-top:8px;font-weight:500}@keyframes fadeInUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.mi{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;margin-bottom:18px;transition:transform .4s cubic-bezier(.16,1,.3,1)}.mc:hover .mi{transform:scale(1.1) rotate(-5deg)}
 
 .scr{display:none}.scr.on{display:block;animation:si .3s ease forwards}@keyframes si{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .bb{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;font-size:12px;font-weight:600;color:var(--t2);background:var(--s);border:1px solid var(--b);border-radius:10px;cursor:pointer;transition:all .2s}.bb:hover{background:var(--h);color:var(--t1)}
@@ -76,7 +76,7 @@ body{background:var(--bg);color:var(--t1);transition:background .3s,color .3s;ma
 [data-theme="dark"] .sw{background:#2a1021 !important;border-color:#db2777 !important;color:#fbcfe8 !important}
 [data-theme="dark"] .sc{background:#08241d !important;border-color:#059669 !important;color:#a7f3d0 !important}
 
-.bs0{border-left:3px solid #3b82f6}.bs1{border-left:3px solid #8b5cf6}.bsn{border-left:3px solid transparent}
+.bs0{border-left:4px solid #3b82f6;background:linear-gradient(90deg,rgba(59,130,246,0.06),transparent 60%) !important;box-shadow:inset 0 0 0 1px rgba(59,130,246,0.15)}.bs1{border-left:4px solid #8b5cf6;background:linear-gradient(90deg,rgba(139,92,246,0.06),transparent 60%) !important;box-shadow:inset 0 0 0 1px rgba(139,92,246,0.15)}.bsn{border-left:3px solid transparent}.dr.bs0+tr:not(.bs0),.dr.bs1+tr:not(.bs1){border-top:2px solid rgba(255,255,255,0.15) !important}
 
 .mo{position:fixed;inset:0;z-index:8000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.4);backdrop-filter:blur(3px)}.mo.hidden{display:none}
 .mbx{position:relative;width:100%;max-width:540px;max-height:80vh;margin:20px;background:var(--c);border-radius:20px;box-shadow:0 20px 60px var(--sh);overflow:hidden;display:flex;flex-direction:column;border:1px solid var(--b)}
@@ -167,7 +167,8 @@ body{background:var(--bg);color:var(--t1);transition:background .3s,color .3s;ma
 <p class="text-[10px] font-semibold uppercase tracking-wider px-4 py-2" style="color:var(--t3)">Navigation</p>
 <button onclick="goScr('dash');togSB()" data-scr="dash" class="sl on"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard</button>
 <button onclick="goScr('qc');togSB()" data-scr="qc" class="sl"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>PK QC Center<span id="sbQ" class="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded" style="background:rgba(59,130,246,.12);color:#60a5fa">0</span></button>
-<button onclick="goScr('zone');togSB()" data-scr="zone" class="sl"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>PK Zone<span id="sbZ" class="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded" style="background:rgba(139,92,246,.12);color:#a78bfa">0</span></button>
+<button onclick="goScr(&apos;summary&apos;);togSB()" data-scr="summary" class="sl"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>Summary<span id="sbSm" class="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded" style="background:rgba(16,185,129,.12);color:#10b981">0</span></button>
+<button onclick="goScr(&apos;zone&apos;);togSB()" data-scr="zone" class="sl"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>PK Zone<span id="sbZ" class="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded" style="background:rgba(139,92,246,.12);color:#a78bfa">0</span></button>
 <div style="height:1px;background:var(--b);margin:8px 16px"></div>
 <p class="text-[10px] font-semibold uppercase tracking-wider px-4 py-2" style="color:var(--t3)">Management</p>
 <button id="sbLg" onclick="openAdm();aTab('logs');togSB()" class="sl" style="display:none"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>Logs</button>
@@ -262,6 +263,24 @@ body{background:var(--bg);color:var(--t1);transition:background .3s,color .3s;ma
 <button onclick="zoneStatusFilter('zone','Complete')" class="zf-btn" data-zf="Complete">✅ Complete</button>
 </div>
 <div id="znC"></div></div>
+
+<!-- SUMMARY TAB -->
+<div id="s-summary" class="scr">
+<div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+<div class="flex items-center gap-3"><button onclick="goScr('dash')" class="bb"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>Dashboard</button><h2 class="text-[17px] font-semibold flex items-center gap-2" style="color:var(--t1)"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>Marking Summary</h2></div>
+<div class="flex items-center gap-2 flex-wrap">
+<button onclick="setSumRange('today')" id="srToday" class="zf-btn zf-on">📅 Today</button>
+<button onclick="setSumRange('week')" id="srWeek" class="zf-btn">7 Days</button>
+<button onclick="setSumRange('month')" id="srMonth" class="zf-btn">30 Days</button>
+<button onclick="setSumRange('all')" id="srAll" class="zf-btn">All Time</button>
+<input type="date" id="srFrom" onchange="setSumRange('custom')" class="input-field" style="padding:6px 10px;font-size:11px;border:1.5px solid var(--b);border-radius:10px;background:var(--c);color:var(--t1)">
+<span style="color:var(--t3);font-size:11px">to</span>
+<input type="date" id="srTo" onchange="setSumRange('custom')" class="input-field" style="padding:6px 10px;font-size:11px;border:1.5px solid var(--b);border-radius:10px;background:var(--c);color:var(--t1)">
+</div>
+</div>
+<div id="sumContent"></div>
+</div>
+
 </main>
 <div id="toast" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2"></div>
 
@@ -287,7 +306,7 @@ let dk=localStorage.getItem('bs_t')==='dark';function aT(){document.documentElem
 
 let sbO=false;function togSB(){sbO=!sbO;$('sbE').classList.toggle('open',sbO);$('sbB').classList.toggle('open',sbO)}
 
-function goScr(n){cScr=n;document.querySelectorAll('.scr').forEach(e=>e.classList.remove('on'));$('s-'+n)?.classList.add('on');document.querySelectorAll('.sl[data-scr]').forEach(l=>l.classList.toggle('on',l.dataset.scr===n));$('topL').textContent={dash:'Dashboard',qc:'PK QC Center',zone:'PK Zone'}[n]||n;if(n==='qc'&&orders.length){cTab='pk_qc_center';aF();rZT('qcC',fO)}if(n==='zone'&&orders.length){cTab='pk_zone';aF();rZT('znC',fO)}if(n==='dash'){cTab='all';aF()}}
+function goScr(n){cScr=n;document.querySelectorAll('.scr').forEach(e=>e.classList.remove('on'));$('s-'+n)?.classList.add('on');document.querySelectorAll('.sl[data-scr]').forEach(l=>l.classList.toggle('on',l.dataset.scr===n));$('topL').textContent={dash:'Dashboard',qc:'PK QC Center',zone:'PK Zone',summary:'Summary'}[n]||n;if(n==='qc'&&orders.length){cTab='pk_qc_center';aF();rZT('qcC',fO)}if(n==='zone'&&orders.length){cTab='pk_zone';aF();rZT('znC',fO)}if(n==='dash'){cTab='all';aF()}if(n==='summary')renderSummary()}
 
 document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='f'){e.preventDefault();const m={dash:$('sI'),qc:$('qcS'),zone:$('znS')};const t=m[cScr]||$('sI');if(t){t.focus();t.select?.();t.closest('.cs,.ls')?.classList.add('cpulse');setTimeout(()=>t.closest('.cs,.ls')?.classList.remove('cpulse'),600)}}});
 
@@ -385,6 +404,12 @@ function syncTypedUser(){
     if(ps){ps.style.opacity='.4';ps.style.pointerEvents='none'}
     return null;
 }
+
+
+let _sumRange='today';
+function setSumRange(r){_sumRange=r;document.querySelectorAll('#s-summary .zf-btn').forEach(b=>b.classList.remove('zf-on'));const map={today:'srToday',week:'srWeek',month:'srMonth',all:'srAll'};if(map[r])document.getElementById(map[r])?.classList.add('zf-on');renderSummary()}
+function getDateRange(){const now=new Date();const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());if(_sumRange==='today')return{from:today,to:new Date(today.getTime()+864e5)};if(_sumRange==='week')return{from:new Date(today.getTime()-7*864e5),to:new Date(today.getTime()+864e5)};if(_sumRange==='month')return{from:new Date(today.getTime()-30*864e5),to:new Date(today.getTime()+864e5)};if(_sumRange==='custom'){const f=document.getElementById('srFrom')?.value;const t=document.getElementById('srTo')?.value;return{from:f?new Date(f):new Date(0),to:t?new Date(new Date(t).getTime()+864e5):new Date(8.64e15)}}return{from:new Date(0),to:new Date(8.64e15)}}
+function renderSummary(){const box=document.getElementById('sumContent');if(!box)return;if(!orders||!orders.length){box.innerHTML='<div class="text-center py-16 rounded-2xl" style="background:var(--s);border:1px solid var(--b)"><p class="text-sm" style="color:var(--t3)">No data loaded yet</p></div>';return}const{from,to}=getDateRange();const marked=orders.filter(o=>{if(!o.marking_updated_at)return false;const d=new Date(o.marking_updated_at);return d>=from&&d<to});const cats=[{key:'Complete',label:'Completed Orders',icon:'✅',color:'#10b981',bg:'rgba(16,185,129,0.08)'},{key:'Single dispatch lead time',label:'Single Dispatch (Lead Time)',icon:'🚀',color:'#6366f1',bg:'rgba(99,102,241,0.08)'},{key:'Single dispatch over weight',label:'Single Dispatch (Overweight)',icon:'⚖️',color:'#ec4899',bg:'rgba(236,72,153,0.08)'},{key:'Hold for bundling',label:'Hold for Bundling',icon:'📦',color:'#3b82f6',bg:'rgba(59,130,246,0.08)'}];let totalAll=0;const sections=cats.map(cat=>{const m=marked.filter(o=>o.packing_status===cat.key);const qc=m.filter(o=>o.zone_location==='PK QC Center').length;const zn=m.filter(o=>o.zone_location==='PK Zone').length;const total=m.length;totalAll+=total;return`<div class="card" style="background:var(--c);border:1px solid var(--b);border-radius:18px;padding:22px;transition:all .3s"><div class="flex items-center gap-3 mb-4"><div style="width:42px;height:42px;border-radius:12px;background:${cat.bg};color:${cat.color};display:flex;align-items:center;justify-content:center;font-size:20px">${cat.icon}</div><h3 style="font-size:14px;font-weight:700;color:var(--t1)">${cat.label}</h3></div><div class="grid grid-cols-3 gap-3"><div style="padding:14px;border-radius:12px;background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.15)"><p style="font-size:10px;font-weight:600;color:#3b82f6;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px">QC Center</p><p style="font-size:24px;font-weight:800;color:var(--t1);line-height:1">${qc}</p></div><div style="padding:14px;border-radius:12px;background:rgba(139,92,246,0.06);border:1px solid rgba(139,92,246,0.15)"><p style="font-size:10px;font-weight:600;color:#8b5cf6;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px">PK Zone</p><p style="font-size:24px;font-weight:800;color:var(--t1);line-height:1">${zn}</p></div><div style="padding:14px;border-radius:12px;background:${cat.bg};border:1px solid ${cat.color}33"><p style="font-size:10px;font-weight:600;color:${cat.color};text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px">Total</p><p style="font-size:24px;font-weight:800;color:var(--t1);line-height:1">${total}</p></div></div></div>`}).join('');const dateLabel=_sumRange==='today'?'Today':_sumRange==='week'?'Last 7 Days':_sumRange==='month'?'Last 30 Days':_sumRange==='all'?'All Time':'Custom Range';box.innerHTML=`<div class="mb-5 p-5 rounded-2xl" style="background:linear-gradient(135deg,rgba(16,185,129,0.08),rgba(59,130,246,0.04));border:1px solid var(--b)"><div class="flex items-center justify-between flex-wrap gap-3"><div><h3 style="font-size:13px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:0.05em">${dateLabel}</h3><p style="font-size:36px;font-weight:800;color:var(--t1);line-height:1;margin-top:6px;background:linear-gradient(135deg,#10b981,#3b82f6);-webkit-background-clip:text;-webkit-text-fill-color:transparent">${totalAll} Orders Marked</p></div><div style="font-size:11px;color:var(--t3)">${marked.length>0?'Last update: '+new Date(Math.max(...marked.map(m=>new Date(m.marking_updated_at).getTime()))).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'No markings yet'}</div></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-4">${sections}</div>`;const sbSm=document.getElementById('sbSm');if(sbSm)sbSm.textContent=totalAll}
 
 function initA(){
     const inp=$('acI');
@@ -505,7 +530,7 @@ const st=o.packing_status||'Pending',ag=age(o.created_at),isSla=st==='Hold for b
 return`<tr class="dr ${str} ${isSla?'sla slap':''}" data-fid="${esc(o.fleek_id)}" data-buyer="${bid}">
 <td class="px-3 py-2.5 text-center"><input type="checkbox" class="chk order-chk" data-fid="${esc(o.fleek_id)}" onchange="updCnt()"></td>
 <td class="px-3 py-2.5 align-top"><span class="inline-block px-2 py-0.5 rounded-md text-[11px] font-bold" style="background:var(--s);border:1px solid var(--b);color:var(--t1)">${bid}</span>${gs>1&&isF?`<span class="block mt-1 px-1.5 py-0.5 rounded text-[9px] font-bold" style="background:rgba(99,102,241,.1);color:#818cf8;border:1px solid rgba(99,102,241,.2)">📦 Bundle (${gs})</span>`:''}</td>
-<td class="px-3 py-2.5 whitespace-nowrap"><span style="color:var(--t1)">${fd(o.created_at)}</span>${isSla?`<p class="text-[9px] font-bold mt-0.5" style="color:#ef4444">${ag}d held</p>`:''}</td>
+<td class="px-3 py-2.5 whitespace-nowrap"><div style="color:var(--t1);font-size:11px">${fd(o.created_at)}</div><div style="font-size:9px;color:var(--t3);margin-top:2px">Status: ${fd(o.latest_status_date)}</div>${o.marking_updated_at?`<div style="font-size:9px;color:#10b981;margin-top:2px">✓ Marked: ${fd(o.marking_updated_at)}</div>`:''}${isSla?`<p class="text-[9px] font-bold mt-0.5" style="color:#ef4444">${ag}d held</p>`:''}</div></td>
 <td class="px-3 py-2.5"><p class="font-mono font-semibold text-[11px]" style="color:var(--t1)">${esc(o.fleek_id)}</p><p class="text-[9px]" style="color:var(--t3)">${esc(o.order_number)}</p></td>
 <td class="px-3 py-2.5"><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style="background:${cfg.bg};color:${cfg.c};border:1px solid ${cfg.bc}"><span class="w-1.5 h-1.5 rounded-full" style="background:${cfg.c}"></span>${esc(o.latest_status)}</span>${isSla?'<span class="block mt-1 text-[9px] font-bold" style="color:#ef4444">⚠ SLA Breach</span>':''}</td>
 <td class="px-3 py-2.5"><p class="font-medium truncate max-w-[130px]" style="color:var(--t1)">${esc(o.item_name)}</p><p class="text-[9px]" style="color:var(--t3)">${esc(o.category)}</p></td>
@@ -541,7 +566,7 @@ const st=o.packing_status||'Pending',ag=age(o.created_at);
 const isSla=st==='Hold for bundling'&&ag>3,cfg=scf(o.latest_status);
 return`<tr class="dr ${str} ${isSla?'sla slap':''}" data-fid="${esc(o.fleek_id)}" data-buyer="${bid}">
 <td class="px-3 py-2.5 align-top"><span class="inline-block px-2 py-0.5 rounded-md text-[11px] font-bold" style="background:var(--s);border:1px solid var(--b);color:var(--t1)">${bid}</span>${gs>1&&isF?`<span class="block mt-1 px-1.5 py-0.5 rounded text-[9px] font-bold" style="background:rgba(99,102,241,.1);color:#818cf8;border:1px solid rgba(99,102,241,.2)">📦 Bundle (${gs})</span>`:''}</td>
-<td class="px-3 py-2.5 whitespace-nowrap"><span style="color:var(--t1)">${fd(o.created_at)}</span>${isSla?`<p class="text-[9px] font-bold mt-0.5" style="color:#ef4444">${ag}d held</p>`:''}</td>
+<td class="px-3 py-2.5 whitespace-nowrap"><div style="color:var(--t1);font-size:11px">${fd(o.created_at)}</div><div style="font-size:9px;color:var(--t3);margin-top:2px">Status: ${fd(o.latest_status_date)}</div>${o.marking_updated_at?`<div style="font-size:9px;color:#10b981;margin-top:2px">✓ Marked: ${fd(o.marking_updated_at)}</div>`:''}${isSla?`<p class="text-[9px] font-bold mt-0.5" style="color:#ef4444">${ag}d held</p>`:''}</div></td>
 <td class="px-3 py-2.5"><p class="font-mono font-semibold text-[11px]" style="color:var(--t1)">${esc(o.fleek_id)}</p><p class="text-[9px]" style="color:var(--t3)">${esc(o.order_number)}</p></td>
 <td class="px-3 py-2.5"><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style="background:${cfg.bg};color:${cfg.c};border:1px solid ${cfg.bc}"><span class="w-1.5 h-1.5 rounded-full" style="background:${cfg.c}"></span>${esc(o.latest_status)}</span>${isSla?'<span class="block mt-1 text-[9px] font-bold" style="color:#ef4444">⚠ SLA Breach</span>':''}</td>
 <td class="px-3 py-2.5"><p class="font-medium truncate max-w-[130px]" style="color:var(--t1)">${esc(o.item_name)}</p><p class="text-[9px]" style="color:var(--t3)">${esc(o.category)}</p></td>

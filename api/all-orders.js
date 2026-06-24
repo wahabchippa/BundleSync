@@ -96,6 +96,7 @@ async function fetchFreshData() {
       customer_country: clean(r[COLUMN_MAP.customer_country]),
       created_at: clean(r[COLUMN_MAP.created_at]),
       latest_status,
+      latest_status_date: clean(r[COLUMN_MAP.latest_status_date]),
       item_name: clean(r[COLUMN_MAP.item_name]),
       category: clean(r[COLUMN_MAP.category]),
       product_type: clean(r[COLUMN_MAP.product_type]),
