@@ -1,0 +1,170 @@
+<!-- ============================================================
+     BUNDLESYNC AUTHENTICATION SYSTEM
+     Insert this HTML right after <body> tag, before the nav
+     ============================================================ -->
+
+<!-- Auth Overlay Screen -->
+<div id="authOverlay" class="auth-overlay">
+    <div class="auth-container">
+        <!-- Logo -->
+        <div class="auth-logo">
+            <div class="auth-logo-icon">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                </svg>
+            </div>
+            <div class="auth-logo-text">
+                <span class="auth-logo-title">BundleSync</span>
+                <span class="auth-logo-subtitle">Packing Consolidation System</span>
+            </div>
+        </div>
+
+        <!-- Login Card -->
+        <div id="loginCard" class="auth-card">
+            <div class="auth-card-header">
+                <h2 class="auth-card-title">Welcome Back</h2>
+                <p class="auth-card-desc">Select your name and enter your PIN to continue</p>
+            </div>
+
+            <form id="loginForm" class="auth-form" onsubmit="handleLogin(event)">
+                <!-- User Select -->
+                <div class="auth-field">
+                    <label class="auth-label" for="userSelect">Team Member</label>
+                    <div class="auth-select-wrapper">
+                        <select id="userSelect" class="auth-select" required>
+                            <option value="" disabled selected>Select your name...</option>
+                        </select>
+                        <svg class="auth-select-arrow" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- PIN Input -->
+                <div class="auth-field">
+                    <label class="auth-label" for="pinInput">4-Digit PIN</label>
+                    <div class="auth-pin-container">
+                        <input type="password" id="pin1" class="auth-pin-box" maxlength="1" inputmode="numeric" pattern="[0-9]" required oninput="handlePinInput(this, 'pin2')" onkeydown="handlePinKeydown(event, null, 'pin2')">
+                        <input type="password" id="pin2" class="auth-pin-box" maxlength="1" inputmode="numeric" pattern="[0-9]" required oninput="handlePinInput(this, 'pin3')" onkeydown="handlePinKeydown(event, 'pin1', 'pin3')">
+                        <input type="password" id="pin3" class="auth-pin-box" maxlength="1" inputmode="numeric" pattern="[0-9]" required oninput="handlePinInput(this, 'pin4')" onkeydown="handlePinKeydown(event, 'pin2', 'pin4')">
+                        <input type="password" id="pin4" class="auth-pin-box" maxlength="1" inputmode="numeric" pattern="[0-9]" required oninput="handlePinInput(this, null)" onkeydown="handlePinKeydown(event, 'pin3', null)">
+                    </div>
+                    <p id="pinError" class="auth-error hidden">Incorrect PIN. Please try again.</p>
+                </div>
+
+                <!-- Login Button -->
+                <button type="submit" id="loginBtn" class="auth-btn-primary">
+                    <span id="loginBtnText">Sign In</span>
+                    <svg id="loginBtnSpinner" class="auth-spinner hidden" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                    </svg>
+                </button>
+            </form>
+
+            <!-- Register Link -->
+            <div class="auth-footer">
+                <p class="auth-footer-text">New team member?</p>
+                <button type="button" onclick="toggleRegisterForm()" class="auth-link">Request Access</button>
+            </div>
+        </div>
+
+        <!-- Registration Card -->
+        <div id="registerCard" class="auth-card hidden">
+            <div class="auth-card-header">
+                <h2 class="auth-card-title">Request Access</h2>
+                <p class="auth-card-desc">Submit your name for admin approval</p>
+            </div>
+
+            <form id="registerForm" class="auth-form" onsubmit="handleRegister(event)">
+                <div class="auth-field">
+                    <label class="auth-label" for="regName">Full Name</label>
+                    <input type="text" id="regName" class="auth-input" placeholder="Enter your full name..." required minlength="3">
+                </div>
+
+                <button type="submit" id="registerBtn" class="auth-btn-primary">
+                    <span id="registerBtnText">Submit Request</span>
+                    <svg id="registerBtnSpinner" class="auth-spinner hidden" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                    </svg>
+                </button>
+
+                <p id="registerSuccess" class="auth-success hidden">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    Request submitted! Awaiting admin approval.
+                </p>
+            </form>
+
+            <div class="auth-footer">
+                <p class="auth-footer-text">Already have access?</p>
+                <button type="button" onclick="toggleRegisterForm()" class="auth-link">Back to Login</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Admin Panel Modal (shown inside app when admin clicks Admin Settings) -->
+<div id="adminModal" class="admin-modal hidden">
+    <div class="admin-modal-backdrop" onclick="closeAdminPanel()"></div>
+    <div class="admin-modal-content">
+        <div class="admin-modal-header">
+            <div>
+                <h2 class="admin-modal-title">Admin Settings</h2>
+                <p class="admin-modal-subtitle">Manage team members and pending requests</p>
+            </div>
+            <button onclick="closeAdminPanel()" class="admin-close-btn">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+
+        <div class="admin-tabs">
+            <button onclick="switchAdminTab('requests')" id="tabRequests" class="admin-tab active">
+                Pending Requests
+                <span id="pendingBadge" class="admin-tab-badge">0</span>
+            </button>
+            <button onclick="switchAdminTab('team')" id="tabTeam" class="admin-tab">
+                Team Management
+            </button>
+        </div>
+
+        <!-- Pending Requests Tab -->
+        <div id="panelRequests" class="admin-panel">
+            <div id="requestsList" class="admin-list">
+                <!-- Populated dynamically -->
+            </div>
+            <div id="noRequests" class="admin-empty">
+                <svg class="w-10 h-10 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <p class="text-gray-400 text-sm">No pending requests</p>
+            </div>
+        </div>
+
+        <!-- Team Management Tab -->
+        <div id="panelTeam" class="admin-panel hidden">
+            <div id="teamList" class="admin-list">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+
+        <!-- PIN Reset Modal -->
+        <div id="pinResetModal" class="pin-reset-modal hidden">
+            <div class="pin-reset-card">
+                <h3 class="text-sm font-semibold text-gray-900 mb-3">Reset PIN for <span id="resetUserName"></span></h3>
+                <div class="flex gap-2 mb-4">
+                    <input type="password" id="newPin1" class="auth-pin-box-sm" maxlength="1" inputmode="numeric">
+                    <input type="password" id="newPin2" class="auth-pin-box-sm" maxlength="1" inputmode="numeric">
+                    <input type="password" id="newPin3" class="auth-pin-box-sm" maxlength="1" inputmode="numeric">
+                    <input type="password" id="newPin4" class="auth-pin-box-sm" maxlength="1" inputmode="numeric">
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="closePinReset()" class="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-50">Cancel</button>
+                    <button onclick="confirmPinReset()" class="flex-1 px-3 py-2 bg-gray-900 text-white rounded-lg text-xs font-medium hover:bg-gray-800">Save PIN</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

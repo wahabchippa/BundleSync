@@ -1,0 +1,74 @@
+<!-- 1) HTML INPUT FIX -->
+<div class="relative" id="loginNameWrapper">
+  <input
+    type="text"
+    id="loginNameInput"
+    class="w-full px-4 py-3 border border-gray-300 rounded-xl"
+    placeholder="Type your name..."
+    autocomplete="off"
+    spellcheck="false"
+  >
+  <ul id="nameDropdown" class="absolute w-full bg-white shadow-md rounded-md hidden z-50 mt-1 max-h-56 overflow-y-auto border border-gray-200"></ul>
+</div>
+
+<script>
+// 2) JAVASCRIPT FILTER LOGIC
+const teamUsers = [
+  'Abdul wahab',
+  'Albash akhtar',
+  'Behzad riaz',
+  'Ishtiaq ur rehman',
+  'Hamza saeed',
+  'Muhammad sohail',
+  'Faizan'
+];
+
+const loginNameInput = document.getElementById('loginNameInput');
+const nameDropdown = document.getElementById('nameDropdown');
+
+loginNameInput.addEventListener('input', function () {
+  const query = this.value.trim().toLowerCase();
+
+  if (!query) {
+    nameDropdown.innerHTML = '';
+    nameDropdown.classList.add('hidden');
+    return;
+  }
+
+  const matchedUsers = teamUsers.filter(name =>
+    name.toLowerCase().includes(query)
+  );
+
+  if (!matchedUsers.length) {
+    nameDropdown.innerHTML = '';
+    nameDropdown.classList.add('hidden');
+    return;
+  }
+
+  nameDropdown.innerHTML = matchedUsers.map(name => `
+    <li
+      class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-sm text-gray-800"
+      onclick="selectLoginName('${name.replace(/'/g, "\\'")}')"
+    >
+      ${name}
+    </li>
+  `).join('');
+
+  nameDropdown.classList.remove('hidden');
+});
+
+// 3) JAVASCRIPT SELECTION LOGIC
+function selectLoginName(name) {
+  loginNameInput.value = name;
+  nameDropdown.classList.add('hidden');
+  nameDropdown.innerHTML = '';
+}
+
+// Optional: hide dropdown when clicking outside
+document.addEventListener('click', function (e) {
+  const wrapper = document.getElementById('loginNameWrapper');
+  if (!wrapper.contains(e.target)) {
+    nameDropdown.classList.add('hidden');
+  }
+});
+</script>

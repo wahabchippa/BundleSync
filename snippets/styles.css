@@ -1,0 +1,31 @@
+/* ============================================================
+   SNIPPET: Add these CSS styles to the <style> section
+   ============================================================ */
+
+/* Buyer group border colors */
+.border-l-blue-400 { border-left-color: #60A5FA; }
+.border-l-purple-400 { border-left-color: #C084FC; }
+.border-l-emerald-400 { border-left-color: #34D399; }
+.border-l-amber-400 { border-left-color: #FBBF24; }
+.border-l-rose-400 { border-left-color: #FB7185; }
+.border-l-cyan-400 { border-left-color: #22D3EE; }
+.border-l-indigo-400 { border-left-color: #818CF8; }
+.border-l-orange-400 { border-left-color: #FB923C; }
+.border-l-transparent { border-left-color: transparent; }
+
+/* Override row highlight */
+.bg-amber-50\/30 { background-color: rgba(255, 251, 235, 0.3); }
+
+/* Smooth transitions for filtering */
+.data-row {
+    transition: opacity 0.15s ease, background-color 0.15s ease;
+}
+
+/* Bundle badge animation */
+@keyframes bundlePulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+.bundle-badge:hover {
+    animation: bundlePulse 0.5s ease;
+}

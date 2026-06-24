@@ -1,0 +1,114 @@
+/* ============================================================
+   BUNDLESYNC — ROW STYLING / COUNTDOWN / DROPDOWN THEME
+   Add to your <style> block.
+   ============================================================ */
+
+/* Buyer bundle badge */
+.buyer-tag {
+    font-family: 'Inter', monospace;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+}
+.bundle-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+/* Left grouping stripes */
+.buyer-stripe-0 { border-left: 3px solid #3B82F6; }
+.buyer-stripe-1 { border-left: 3px solid #8B5CF6; }
+.buyer-stripe-2 { border-left: 3px solid #10B981; }
+.buyer-stripe-3 { border-left: 3px solid #F59E0B; }
+.buyer-stripe-4 { border-left: 3px solid #EF4444; }
+.buyer-stripe-5 { border-left: 3px solid #06B6D4; }
+.buyer-stripe-6 { border-left: 3px solid #EC4899; }
+.buyer-stripe-7 { border-left: 3px solid #F97316; }
+.buyer-stripe-none { border-left: 3px solid transparent; }
+
+/* Smooth row hover */
+.data-row {
+    transition: background-color 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.data-row:hover {
+    background: #FAFAFA;
+}
+
+/* SLA breach row alert */
+.sla-breach {
+    background: #FEF2F2 !important;
+    border-bottom: 1px solid #FECACA !important;
+}
+.sla-breach:hover {
+    background: #FEE2E2 !important;
+}
+@keyframes breachPulse {
+    0%, 100% { box-shadow: inset 0 0 0 0 rgba(239, 68, 68, 0.04); }
+    50% { box-shadow: inset 0 0 0 999px rgba(244, 63, 94, 0.035); }
+}
+.sla-breach-pulse {
+    animation: breachPulse 2.2s ease-in-out infinite;
+}
+
+/* Themed dropdown */
+.status-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 12px;
+    padding-right: 28px;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: -0.01em;
+    line-height: 1.4;
+    border-width: 1.5px;
+    border-style: solid;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease, filter 0.15s ease;
+}
+.status-select:hover {
+    filter: brightness(0.98);
+}
+.status-select:focus {
+    outline: none;
+    border-color: #6B7280;
+    box-shadow: 0 0 0 2.5px rgba(107, 114, 128, 0.1);
+}
+.status-select option {
+    background: #FFFFFF;
+    color: #374151;
+    font-weight: 500;
+}
+
+/* Per-status dropdown themes */
+.status-pending {
+    background-color: #FFFBEB;
+    border-color: #F59E0B;
+    color: #92400E;
+}
+.status-hold {
+    background-color: #EFF6FF;
+    border-color: #3B82F6;
+    color: #1E40AF;
+}
+.status-lead {
+    background-color: #EEF2FF;
+    border-color: #6366F1;
+    color: #3730A3;
+}
+.status-weight {
+    background-color: #FDF2F8;
+    border-color: #EC4899;
+    color: #9D174D;
+}
+.status-complete {
+    background-color: #ECFDF5;
+    border-color: #10B981;
+    color: #065F46;
+}

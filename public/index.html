@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logistics Packing Tool</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', system-ui, sans-serif; }
+        body { background: #FFFFFF; }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: #F9FAFB; }
+        ::-webkit-scrollbar-thumb { background: #E5E7EB; border-radius: 3px; }
+        .search-input:focus { outline: none; box-shadow: 0 0 0 2px rgba(17,24,39,0.08); border-color: #9CA3AF; }
+        .data-row:hover { background: #FAFAFA; }
+        .tab { transition: all 0.15s ease; }
+        .tab.active { background: #111827; color: white; }
+        .tab:not(.active):hover { background: #F3F4F6; }
+        .status-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 6px center;
+            background-size: 14px;
+            padding-right: 26px;
+        }
+        .status-select:focus { outline: none; border-color: #6B7280; }
+        .status-pending { background: #FEF3C7; border-color: #FCD34D; color: #92400E; }
+        .status-hold { background: #DBEAFE; border-color: #93C5FD; color: #1E40AF; }
+        .status-lead { background: #E0E7FF; border-color: #A5B4FC; color: #3730A3; }
+        .status-weight { background: #FCE7F3; border-color: #F9A8D4; color: #9D174D; }
+        .status-complete { background: #D1FAE5; border-color: #6EE7B7; color: #065F46; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-in { animation: fadeIn 0.25s ease-out; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spin { animation: spin 0.6s linear infinite; }
+        .skeleton { background: linear-gradient(90deg,#F3F4F6 25%,#E5E7EB 50%,#F3F4F6 75%); background-size: 200% 100%; animation: shimmer 1s infinite; }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        @media print { .no-print { display: none !important; } }
+    </style>
+</head>
+<body class="min-h-screen bg-white text-gray-900 antialiased">
+
+    <!-- Header -->
+    <nav class="bg-white border-b border-gray-100 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-sm font-semibold text-gray-900">Packing Team Tool</h1>
+                    <p class="text-[10px] text-gray-400">Zone Management & Order Consolidation</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4 no-print">
+                <div id="statusIndicator" class="flex items-center gap-1.5 text-[10px] text-gray-400">
+                    <span class="w-2 h-2 rounded-full bg-gray-300"></span>
+                    <span>Checking...</span>
+                </div>
+                <span class="text-[10px] text-gray-400 hidden sm:block" id="clock"></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        
+        <!-- Search -->
+        <section class="no-print mb-6">
+            <div class="max-w-xl mx-auto text-center">
+                <h2 class="text-xl font-semibold text-gray-900">Verify & Consolidate Orders</h2>
+                <p class="mt-1 text-xs text-gray-500">Enter a Fleek ID to find related orders within 7 days.</p>
+                
+                <form id="searchForm" class="mt-5 flex gap-2">
+                    <div class="relative flex-1">
+                        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        <input type="text" id="searchInput" class="search-input w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm placeholder-gray-400" placeholder="Enter Fleek ID or Order Number..." autocomplete="off" spellcheck="false">
+                    </div>
+                    <button type="submit" id="searchBtn" class="px-6 py-3 bg-gray-900 hover:bg-gray-800 disabled:bg-gray-400 text-white text-sm font-medium rounded-xl flex items-center gap-2">
+                        <svg id="searchIcon" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <svg id="loadingIcon" class="w-4 h-4 spin hidden" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                        </svg>
+                        <span id="btnLabel">Verify</span>
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- Results -->
+        <section id="results" class="hidden"></section>
+
+        <!-- Empty State -->
+        <section id="emptyState" class="mt-12 text-center">
+            <div class="w-14 h-14 mx-auto bg-gray-50 rounded-2xl flex items-center justify-center border border-gray-100">
+                <svg class="w-7 h-7 text-gray-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                </svg>
+            </div>
+            <p class="mt-3 text-sm text-gray-400">No orders verified yet</p>
+        </section>
+
+        <!-- Loading State -->
+        <section id="loadingState" class="hidden mt-6">
+            <div class="bg-white border border-gray-100 rounded-2xl p-5">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="skeleton w-6 h-6 rounded"></div>
+                    <div class="skeleton w-40 h-4 rounded"></div>
+                </div>
+                <div class="grid grid-cols-5 gap-3 mb-4">
+                    <div class="skeleton h-14 rounded-xl"></div>
+                    <div class="skeleton h-14 rounded-xl"></div>
+                    <div class="skeleton h-14 rounded-xl"></div>
+                    <div class="skeleton h-14 rounded-xl"></div>
+                    <div class="skeleton h-14 rounded-xl"></div>
+                </div>
+                <div class="space-y-2">
+                    <div class="skeleton h-10 rounded"></div>
+                    <div class="skeleton h-10 rounded"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Error State -->
+        <section id="errorState" class="hidden mt-8">
+            <div class="max-w-sm mx-auto text-center bg-white border border-gray-200 rounded-xl p-6">
+                <div class="w-10 h-10 mx-auto bg-red-50 rounded-xl flex items-center justify-center mb-3">
+                    <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                    </svg>
+                </div>
+                <h3 class="text-sm font-semibold text-gray-900" id="errorTitle">Error</h3>
+                <p class="mt-1 text-xs text-gray-500" id="errorMsg">Something went wrong.</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2"></div>
+
+    <script>
+    const API = '/api';
+    const PACKING_STATUSES = [
+        'Pending',
+        'Hold for bundling',
+        'Single dispatch lead time',
+        'Single dispatch over weight',
+        'Complete'
+    ];
+
+    let orders = [];
+    let filteredOrders = [];
+    let currentTab = 'all';
+    let saving = new Set();
+    let searchData = null;
+
+    const $ = id => document.getElementById(id);
+    const fmtDate = d => { if (!d) return '—'; const dt = new Date(d); return isNaN(dt) ? d : dt.toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'}); };
+    const fmtDateTime = d => { if (!d) return '—'; const dt = new Date(d); return isNaN(dt) ? d : fmtDate(d) + ', ' + dt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); };
+    const esc = s => { if (s == null) return '—'; const d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; };
+
+    const statusCfg = s => {
+        const l = (s||'').toLowerCase();
+        if (l === 'delivered') return {bg:'bg-emerald-50',text:'text-emerald-700',dot:'bg-emerald-500',border:'border-emerald-100'};
+        if (l === 'shipped') return {bg:'bg-blue-50',text:'text-blue-700',dot:'bg-blue-500',border:'border-blue-100'};
+        if (l === 'processing' || l === 'pending') return {bg:'bg-amber-50',text:'text-amber-700',dot:'bg-amber-500',border:'border-amber-100'};
+        if (l === 'returned' || l === 'cancelled') return {bg:'bg-red-50',text:'text-red-600',dot:'bg-red-500',border:'border-red-100'};
+        return {bg:'bg-gray-50',text:'text-gray-600',dot:'bg-gray-400',border:'border-gray-200'};
+    };
+
+    const packingStatusClass = s => {
+        if (s === 'Pending') return 'status-pending';
+        if (s === 'Hold for bundling') return 'status-hold';
+        if (s === 'Single dispatch lead time') return 'status-lead';
+        if (s === 'Single dispatch over weight') return 'status-weight';
+        if (s === 'Complete') return 'status-complete';
+        return '';
+    };
+
+    function toast(msg, type='info') {
+        const t = document.createElement('div');
+        const bg = {info:'bg-gray-900',success:'bg-emerald-600',error:'bg-red-600'}[type] || 'bg-gray-900';
+        t.className = `${bg} text-white px-4 py-2 rounded-xl text-xs font-medium shadow-lg animate-in`;
+        t.textContent = msg;
+        $('toast').appendChild(t);
+        setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity 0.2s'; setTimeout(() => t.remove(), 200); }, 3000);
+    }
+
+    function showLoading() {
+        $('emptyState').classList.add('hidden');
+        $('errorState').classList.add('hidden');
+        $('results').classList.add('hidden');
+        $('loadingState').classList.remove('hidden');
+        $('searchBtn').disabled = true;
+        $('searchIcon').classList.add('hidden');
+        $('loadingIcon').classList.remove('hidden');
+        $('btnLabel').textContent = 'Searching...';
+    }
+
+    function hideLoading() {
+        $('loadingState').classList.add('hidden');
+        $('searchBtn').disabled = false;
+        $('searchIcon').classList.remove('hidden');
+        $('loadingIcon').classList.add('hidden');
+        $('btnLabel').textContent = 'Verify';
+    }
+
+    function showError(title, msg) {
+        hideLoading();
+        $('emptyState').classList.add('hidden');
+        $('results').classList.add('hidden');
+        $('errorState').classList.remove('hidden');
+        $('errorTitle').textContent = title;
+        $('errorMsg').textContent = msg;
+    }
+
+    function setDashboardMetricsVisible(isVisible) {
+        const metrics = document.getElementById('dashboardMetrics');
+        if (metrics) metrics.classList.toggle('hidden', !isVisible);
+    }
+
+    function clearDashboardSearchState() {
+        const q = $('searchInput');
+        if (q) q.value = '';
+        $('results')?.classList.add('hidden');
+        $('errorState')?.classList.add('hidden');
+        $('loadingState')?.classList.add('hidden');
+        $('emptyState')?.classList.remove('hidden');
+        setDashboardMetricsVisible(true);
+    }
+
+    async function search(query) {
+        showLoading();
+        try {
+            const res = await fetch(`${API}/search?fleek_id=${encodeURIComponent(query)}`);
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || 'Search failed');
+            searchData = data;
+            orders = data.orders || [];
+            currentTab = 'all';
+            applyFilter();
+            render(data);
+            setDashboardMetricsVisible(false);
+        } catch (e) {
+            setDashboardMetricsVisible(true);
+            showError('Search Failed', e.message);
+        }
+    }
+
+    function applyFilter() {
+        if (currentTab === 'all') {
+            filteredOrders = [...orders];
+        } else if (currentTab === 'pk_qc_center') {
+            filteredOrders = orders.filter(o => o.zone_location === 'PK QC Center');
+        } else if (currentTab === 'pk_zone') {
+            filteredOrders = orders.filter(o => o.zone_location === 'PK Zone');
+        }
+    }
+
+    function switchTab(tab) {
+        currentTab = tab;
+        applyFilter();
+        renderTable();
+        updateTabStyles();
+    }
+
+    function updateTabStyles() {
+        document.querySelectorAll('.zone-tab').forEach(t => {
+            t.classList.remove('active');
+            if (t.dataset.tab === currentTab) t.classList.add('active');
+        });
+    }
+
+    function render(data) {
+        hideLoading();
+        $('emptyState').classList.add('hidden');
+        $('errorState').classList.add('hidden');
+        $('results').classList.remove('hidden');
+
+        const s = data.summary || {};
+        const zc = s.zone_counts || {};
+        const windowEnd = new Date(new Date(data.searched_date).getTime() + 7*24*60*60*1000);
+
+        $('results').innerHTML = `
+        <div class="animate-in">
+            <div class="mb-5 p-4 bg-[#F9FAFB] border border-gray-100 rounded-2xl">
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <h3 class="text-sm font-semibold text-gray-900">Packing Consolidation Report</h3>
+                            <span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[9px] font-bold rounded-full border border-emerald-200 uppercase">7-Day</span>
+                        </div>
+                        <p class="text-[11px] text-gray-500">
+                            Customer: <span class="font-semibold text-gray-700">${esc(data.customer_id)}</span>
+                            <span class="mx-1.5 text-gray-300">|</span>
+                            Country: <span class="font-semibold text-gray-700">${esc(data.customer_country)}</span>
+                            <span class="mx-1.5 text-gray-300">|</span>
+                            Window: ${fmtDate(data.searched_date)} → ${fmtDate(windowEnd)}
+                        </p>
+                    </div>
+                    <button onclick="exportCSV()" class="no-print px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-[11px] font-medium text-gray-600 hover:bg-gray-50 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        Export
+                    </button>
+                </div>
+                <div class="grid grid-cols-5 gap-2 mt-4">
+                    <div class="bg-white border border-gray-100 rounded-xl px-3 py-2">
+                        <p class="text-[9px] font-semibold text-gray-400 uppercase">Orders</p>
+                        <p class="text-lg font-bold text-gray-900">${s.total_orders||0}</p>
+                    </div>
+                    <div class="bg-white border border-gray-100 rounded-xl px-3 py-2">
+                        <p class="text-[9px] font-semibold text-gray-400 uppercase">Qty</p>
+                        <p class="text-lg font-bold text-gray-900">${s.total_quantity||0}</p>
+                    </div>
+                    <div class="bg-white border border-gray-100 rounded-xl px-3 py-2">
+                        <p class="text-[9px] font-semibold text-gray-400 uppercase">Vendors</p>
+                        <p class="text-lg font-bold text-gray-900">${s.unique_vendors||0}</p>
+                    </div>
+                    <div class="bg-white border border-gray-100 rounded-xl px-3 py-2">
+                        <p class="text-[9px] font-semibold text-gray-400 uppercase">Bargain</p>
+                        <p class="text-lg font-bold text-gray-900">${s.bargain_bin_count||0}</p>
+                    </div>
+                    <div class="bg-white border border-gray-100 rounded-xl px-3 py-2">
+                        <p class="text-[9px] font-semibold text-gray-400 uppercase">Complete</p>
+                        <p class="text-lg font-bold text-emerald-600">${s.complete_count||0}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="mb-4 flex items-center gap-2">
+                <div class="flex bg-gray-100 rounded-xl p-1">
+                    <button onclick="switchTab('all')" data-tab="all" class="zone-tab tab active px-4 py-2 rounded-lg text-xs font-medium">
+                        All Orders <span class="ml-1 px-1.5 py-0.5 bg-gray-200 text-gray-600 rounded text-[10px]">${zc.all||0}</span>
+                    </button>
+                    <button onclick="switchTab('pk_qc_center')" data-tab="pk_qc_center" class="zone-tab tab px-4 py-2 rounded-lg text-xs font-medium">
+                        PK QC Center <span class="ml-1 px-1.5 py-0.5 bg-blue-100 text-blue-600 rounded text-[10px]">${zc.pk_qc_center||0}</span>
+                    </button>
+                    <button onclick="switchTab('pk_zone')" data-tab="pk_zone" class="zone-tab tab px-4 py-2 rounded-lg text-xs font-medium">
+                        PK Zone <span class="ml-1 px-1.5 py-0.5 bg-purple-100 text-purple-600 rounded text-[10px]">${zc.pk_zone||0}</span>
+                    </button>
+                </div>
+                <div class="flex-1"></div>
+                <p class="text-[10px] text-gray-400">Showing <span id="filterCount" class="font-semibold text-gray-600">${filteredOrders.length}</span> orders</p>
+            </div>
+            <div id="tableContainer"></div>
+        </div>`;
+        renderTable();
+    }
+
+    function renderTable() {
+        const c = $('tableContainer'); if (!c) return;
+        const fc = $('filterCount'); if (fc) fc.textContent = filteredOrders.length;
+
+        c.innerHTML = `
+        <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+            <div class="overflow-x-auto">
+                <table class="w-full text-xs">
+                    <thead>
+                        <tr class="bg-[#F9FAFB] border-b border-gray-200">
+                            <th class="text-left px-3 py-2.5 font-semibold text-gray-500 uppercase text-[9px]">Created</th>
+                            <th class="text-left px-3 py-2.5 font-semibold text-gray-500 uppercase text-[9px]">Fleek ID</th>
+                            <th class="text-left px-3 py-2.5 font-semibold text-gray-500 uppercase text-[9px]">Status</th>
+                            <th class="text-left px-3 py-2.5 font-semibold text-gray-500 uppercase text-[9px]">Item</th>
+                            <th class="text-left px-3 py-2.5 font-semibold text-gray-500 uppercase text-[9px]">Category</th>
+                            <th class="text-center px-3 py-2.5 font-semibold text-gray-500 uppercase text-[9px]">Qty</th>
+                            <th class="text-left px-3 py-2.5 font-semibold text-gray-500 uppercase text-[9px]">Vendor</th>
+                            <th class="text-left px-3 py-2.5 font-semibold text-gray-500 uppercase text-[9px]">Zone</th>
+                            <th class="text-center px-3 py-2.5 font-semibold text-gray-500 uppercase text-[9px]">Bargain</th>
+                            <th class="text-left px-3 py-2.5 font-semibold text-gray-500 uppercase text-[9px] min-w-[280px]">Packing Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        ${filteredOrders.length === 0 
+                            ? `<tr><td colspan="10" class="px-4 py-8 text-center text-gray-400 text-sm">No orders in this zone</td></tr>`
+                            : filteredOrders.map((o,i) => row(o, o.fleek_id === searchData?.searched_fleek_id)).join('')}
+                    </tbody>
+                </table>
+            </div>
+            <div class="px-4 py-2.5 bg-[#F9FAFB] border-t border-gray-100 text-[10px] text-gray-400">
+                ${filteredOrders.length} order${filteredOrders.length!==1?'s':''} displayed
+            </div>
+        </div>`;
+    }
+
+    function row(o, isSearched) {
+        const sc = statusCfg(o.latest_status);
+        const fid = esc(o.fleek_id);
+        const ps = o.packing_status || 'Pending';
+        const psc = packingStatusClass(ps);
+        const zc = o.zone_location === 'PK QC Center' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-purple-50 text-purple-700 border-purple-200';
+        
+        return `
+        <tr class="data-row ${isSearched ? 'bg-blue-50/40' : ''}" data-fid="${fid}">
+            <td class="px-3 py-2.5 whitespace-nowrap">
+                ${isSearched ? '<span class="inline-block w-1.5 h-1.5 rounded-full bg-blue-500 mr-1"></span>' : ''}
+                <span class="text-gray-700">${fmtDate(o.created_at)}</span>
+            </td>
+            <td class="px-3 py-2.5">
+                <p class="font-mono font-semibold text-gray-800 text-[11px]">${fid}</p>
+                <p class="text-[9px] text-gray-400">${esc(o.order_number)}</p>
+            </td>
+            <td class="px-3 py-2.5">
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${sc.bg} ${sc.text} border ${sc.border}">
+                    <span class="w-1.5 h-1.5 rounded-full ${sc.dot}"></span>
+                    ${esc(o.latest_status)}
+                </span>
+            </td>
+            <td class="px-3 py-2.5">
+                <p class="text-gray-800 font-medium max-w-[140px] truncate" title="${esc(o.item_name)}">${esc(o.item_name)}</p>
+            </td>
+            <td class="px-3 py-2.5">
+                <p class="text-gray-700">${esc(o.category)}</p>
+                <p class="text-[9px] text-gray-400">${esc(o.product_type)}</p>
+            </td>
+            <td class="px-3 py-2.5 text-center">
+                <span class="inline-flex items-center justify-center w-6 h-6 bg-gray-100 text-gray-800 font-bold rounded text-[11px]">${o.quantity_sold ?? '—'}</span>
+            </td>
+            <td class="px-3 py-2.5">
+                <p class="text-gray-800 font-medium max-w-[100px] truncate">${esc(o.vendor)}</p>
+            </td>
+            <td class="px-3 py-2.5">
+                <span class="inline-flex items-center px-2 py-1 rounded-lg text-[10px] font-semibold border ${zc}">${esc(o.zone_location)}</span>
+            </td>
+            <td class="px-3 py-2.5 text-center">
+                ${o.bargain_bin_flag ? '<span class="inline-flex items-center justify-center w-5 h-5 bg-amber-100 rounded-full border border-amber-200"><svg class="w-3 h-3 text-amber-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></span>' : '<span class="text-gray-300">—</span>'}
+            </td>
+            <td class="px-3 py-2">
+                <div class="flex items-center gap-2">
+                    <select id="status-${fid}" class="status-select flex-1 px-2.5 py-1.5 border rounded-lg text-[11px] font-medium cursor-pointer ${psc}" data-fid="${fid}" onchange="updateSelectStyle(this)">
+                        ${PACKING_STATUSES.map(s => `<option value="${s}" ${s === ps ? 'selected' : ''}>${s}</option>`).join('')}
+                    </select>
+                    <button onclick="saveStatus('${fid}')" id="btn-${fid}" class="px-2.5 py-1.5 bg-gray-900 hover:bg-gray-800 disabled:bg-gray-300 text-white text-[10px] font-semibold rounded-lg flex items-center gap-1">
+                        <svg class="w-3 h-3 ic-save" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                        <svg class="w-3 h-3 ic-load hidden spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                        Save
+                    </button>
+                </div>
+                ${o.marking_updated_at ? `<p class="text-[9px] text-gray-400 mt-1">Updated: ${fmtDateTime(o.marking_updated_at)}</p>` : ''}
+            </td>
+        </tr>`;
+    }
+
+    function updateSelectStyle(sel) {
+        sel.className = sel.className.replace(/status-\w+/g, '').trim();
+        sel.classList.add(packingStatusClass(sel.value));
+    }
+
+    async function saveStatus(fid) {
+        if (saving.has(fid)) return;
+        const sel = document.getElementById(`status-${fid}`);
+        const btn = document.getElementById(`btn-${fid}`);
+        if (!sel || !btn) return;
+
+        saving.add(fid);
+        btn.disabled = true;
+        btn.querySelector('.ic-save').classList.add('hidden');
+        btn.querySelector('.ic-load').classList.remove('hidden');
+
+        try {
+            const res = await fetch(`${API}/marking`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ fleek_id: fid, packing_status: sel.value })
+            });
+            if (!res.ok) throw new Error('Save failed');
+
+            const o = orders.find(x => x.fleek_id === fid);
+            if (o) { o.packing_status = sel.value; o.marking_updated_at = new Date().toISOString(); }
+
+            sel.classList.add('ring-2', 'ring-emerald-400');
+            toast(`Status updated to "${sel.value}"`, 'success');
+            setTimeout(() => sel.classList.remove('ring-2', 'ring-emerald-400'), 1500);
+        } catch (e) {
+            toast(`Failed: ${e.message}`, 'error');
+        } finally {
+            saving.delete(fid);
+            btn.disabled = false;
+            btn.querySelector('.ic-save').classList.remove('hidden');
+            btn.querySelector('.ic-load').classList.add('hidden');
+        }
+    }
+
+    function exportCSV() {
+        if (!filteredOrders.length) return toast('No data', 'error');
+        const h = ['created_at','fleek_id','order_number','latest_status','item_name','category','product_type','quantity_sold','vendor','zone_location','bargain_bin_flag','packing_status'];
+        const rows = filteredOrders.map(o => h.map(k => { let v = o[k]; if (v==null) return ''; if (typeof v === 'boolean') return v?'Yes':'No'; v = String(v).replace(/"/g,'""'); return v.includes(',')?`"${v}"`:v; }).join(','));
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([[h.join(','), ...rows].join('\n')], {type:'text/csv'}));
+        a.download = `packing_${currentTab}_${Date.now()}.csv`;
+        a.click();
+        toast('CSV exported', 'success');
+    }
+
+    $('searchForm').addEventListener('submit', e => { 
+        e.preventDefault();
+        const q = $('searchInput').value.trim();
+        if (q) search(q);
+        else clearDashboardSearchState();
+    });
+    $('searchInput').addEventListener('input', e => { 
+        if (!e.target.value.trim()) clearDashboardSearchState();
+    });
+    $('searchInput').addEventListener('keydown', e => { 
+        if (e.key === 'Escape') clearDashboardSearchState();
+    });
+
+    async function checkHealth() {
+        try {
+            const r = await fetch(`${API}/health`);
+            const d = await r.json();
+            $('statusIndicator').innerHTML = d.ok 
+                ? '<span class="w-2 h-2 rounded-full bg-emerald-500"></span><span>Connected</span>'
+                : '<span class="w-2 h-2 rounded-full bg-amber-500"></span><span>Degraded</span>';
+        } catch {
+            $('statusIndicator').innerHTML = '<span class="w-2 h-2 rounded-full bg-red-500"></span><span>Offline</span>';
+        }
+    }
+    checkHealth(); setInterval(checkHealth, 60000);
+
+    function updateClock() { $('clock').textContent = new Date().toLocaleString('en-GB', {weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}); }
+    updateClock(); setInterval(updateClock, 30000);
+
+    $('searchInput').focus();
+    </script>
+</body>
+</html>
