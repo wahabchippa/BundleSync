@@ -87,7 +87,8 @@ async function fetchFreshData() {
     const statusOk = latest_status && ALLOWED_STATUSES.has(latest_status.toUpperCase());
 
     // Status OK + qty OK
-    const qualifiesByStatus = statusOk && (qty == null || qty <= MAX_QUANTITY);
+    const isCancelled = latest_status && /cancel/i.test(latest_status);
+    const qualifiesByStatus = statusOk && !isCancelled && (qty == null || qty <= MAX_QUANTITY);
 
     // Always include if has marking (even if qty > 100 or status changed)
     if (!qualifiesByStatus && !hasMarking) return null;
