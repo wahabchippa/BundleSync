@@ -208,8 +208,8 @@ body{background:var(--bg);color:var(--t1);transition:background .3s,color .3s;ma
 
 
 /* Safe BG */
-:root{--bg:#f4f5f7}[data-theme="dark"]{--bg:#0c1018}
-body{background:var(--bg)!important}
+:root{--bg:linear-gradient(135deg,#e9edf5 0%,#f5f0eb 35%,#e8ecf4 65%,#f0ece5 100%)}[data-theme="dark"]{--bg:linear-gradient(135deg,#0a0e1a 0%,#121827 35%,#0e1422 65%,#151b2b 100%)}
+body{background:var(--bg)!important;background-attachment:fixed!important}
 </style>
 </head>
 <body class="min-h-screen antialiased">
