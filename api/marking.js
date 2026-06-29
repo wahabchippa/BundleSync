@@ -10,6 +10,8 @@ const VALID_STATUSES = [
   'Single dispatch lead time',
   'Single dispatch over weight',
   'Complete',
+  'Hold',
+  'Dispatched',
 ];
 
 // ============================================================
