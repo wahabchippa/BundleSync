@@ -60,8 +60,8 @@ async function fetchSeaOrders() {
     // Handle multiple values separated by , or ; or newline
     const parts = seaVal.split(/[,;\n\r]+/);
     parts.forEach(p => {
-      const cleaned = p.trim().replace(/^#/, ''); // Remove leading #
-      if (cleaned && /^\d+$/.test(cleaned)) {
+      const cleaned = p.trim();
+      if (cleaned) {
         seaOrderNumbers.add(cleaned);
       }
     });
