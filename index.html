@@ -638,7 +638,7 @@ $('res').innerHTML=`<div class="fin"><div class="mb-5 p-4 rounded-2xl" style="ba
 
 function rT(){const c=$('tC');if(!c)return;
 if(!fO||fO.length===0){c.innerHTML=`<div class="text-center py-16 rounded-2xl" style="background:var(--s);border:1px solid var(--b)"><p class="text-sm" style="color:var(--t3)">No orders to display</p></div>`;return}
-const groups={};fO.forEach(o=>{const key=(o.customer_name&&o.customer_name.trim())?o.customer_name.trim().toLowerCase():(o.customer_id||'unknown');if(!groups[key])groups[key]=[];groups[key].push(o)});
+const groups={};fO.forEach(o=>{const ckey=(o.customer_name&&o.customer_name.trim())?o.customer_name.trim().toLowerCase():(o.customer_id||'unknown');const key=ckey+'__'+(o.zone_location||'unknown');if(!groups[key])groups[key]=[];groups[key].push(o)});
 let sortedGroups=Object.values(groups).sort((a,b)=>new Date(b[0].latest_status_date||b[0].created_at)-new Date(a[0].latest_status_date||a[0].created_at));
 const now=Date.now(),th=(typeof state!=='undefined'&&state?.slaThreshold?state.slaThreshold:3)*864e5;
 let bulkBarHtml=`<div class="bulk-bar"><input type="checkbox" class="chk" id="selAll" onchange="togAll(this.checked)"><span class="text-[11px] font-semibold" style="color:var(--t3)">Select All</span><select id="bulkSel" class="ssel px-3 py-1.5 rounded-lg text-[11px]">${ST.map(s=>`<option value="${s}">${s}</option>`).join('')}</select><button onclick="bulkApply()" class="btn" style="width:auto;padding:6px 16px;font-size:11px">Apply</button><span id="selCnt" class="text-[10px]" style="color:var(--t3)">0 selected</span></div>`;
@@ -714,7 +714,7 @@ function zoneStatusFilter(zone,status){if(zone==='qc'){qcStatusFilter=status;res
 
 function renderZoneFiltered(cid,list){const c=$(cid);if(!c)return;
 if(!list||!list.length){c.innerHTML=`<div class="text-center py-16 rounded-2xl" style="background:var(--s);border:1px solid var(--b)"><p class="text-sm" style="color:var(--t3)">No orders in this filter</p></div>`;return}
-const groups={};list.forEach(o=>{const key=(o.customer_name&&o.customer_name.trim())?o.customer_name.trim().toLowerCase():(o.customer_id||'unknown');if(!groups[key])groups[key]=[];groups[key].push(o)});
+const groups={};list.forEach(o=>{const ckey=(o.customer_name&&o.customer_name.trim())?o.customer_name.trim().toLowerCase():(o.customer_id||'unknown');const key=ckey+'__'+(o.zone_location||'unknown');if(!groups[key])groups[key]=[];groups[key].push(o)});
 let sortedGroups=Object.values(groups).sort((a,b)=>new Date(b[0].latest_status_date||b[0].created_at)-new Date(a[0].latest_status_date||a[0].created_at));
 let html='';
 sortedGroups.forEach((group,idx)=>{
