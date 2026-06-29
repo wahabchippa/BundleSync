@@ -560,7 +560,7 @@ selectedFid=row.dataset.fid;
 document.addEventListener('keydown',e=>{
 if(!selectedFid)return;
 if(!e.ctrlKey)return;
-const map={'c':'Complete','l':'Single dispatch lead time','d':'Single dispatch over weight','h':'Hold for bundling'};
+const map={'c':'Complete','l':'Single dispatch lead time','d':'Single dispatch over weight','h':'Hold for bundling'};if(key==='f'){e.preventDefault();const sb=cScr==='qc'?$('qcS'):cScr==='zone'?$('znS'):cScr==='sea'?$('seaS'):$('sI');if(sb)sb.focus();return}
 const key=e.key.toLowerCase();
 if(!map[key])return;
 e.preventDefault();
