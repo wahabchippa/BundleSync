@@ -75,7 +75,7 @@ async function fetchSeaOrders() {
   let markings = {};
   if (CONFIG.supabase.url && CONFIG.supabase.serviceKey) {
     const sb = createClient(CONFIG.supabase.url, CONFIG.supabase.serviceKey, { auth: { autoRefreshToken: false, persistSession: false } });
-    const { data } = await sb.from('order_markings').select('fleek_id, packing_status, marked_by, updated_at');
+    const { data } = await sb.from('sea_order_markings').select('fleek_id, packing_status, marked_by, updated_at');
     (data || []).forEach(m => { markings[m.fleek_id] = m; });
   }
 
