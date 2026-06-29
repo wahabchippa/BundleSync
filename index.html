@@ -206,6 +206,10 @@ body{background:var(--bg);color:var(--t1);transition:background .3s,color .3s;ma
 [data-theme="dark"] 
 [data-theme="dark"] 
 
+
+/* Safe BG */
+:root{--bg:#f0f2f5}[data-theme="dark"]{--bg:#0a0e17}
+body{background:var(--bg)!important}
 </style>
 </head>
 <body class="min-h-screen antialiased">
