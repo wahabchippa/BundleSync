@@ -84,8 +84,7 @@ async function fetchSeaOrders() {
     const fleek_id = clean(r[COLUMN_MAP.fleek_id]);
     if (!fleek_id) return null;
     // Match fleek_id like "155335_66" if "155335" is in sea orders
-    const prefix = fleek_id.split('_')[0];
-    if (!seaOrderNumbers.has(prefix)) return null;
+    if (!seaOrderNumbers.has(fleek_id)) return null;
 
     return {
       fleek_id,
