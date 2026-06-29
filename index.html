@@ -211,6 +211,13 @@ body{background:var(--bg);color:var(--t1);transition:background .3s,color .3s;ma
 :root{--bg:linear-gradient(135deg,#e9edf5 0%,#f5f0eb 35%,#e8ecf4 65%,#f0ece5 100%)}[data-theme="dark"]{--bg:linear-gradient(135deg,#0a0e1a 0%,#121827 35%,#0e1422 65%,#151b2b 100%)}
 body{background:var(--bg)!important;background-attachment:fixed!important}
 
+
+/* Login Style Safe */
+#lC,#rC{backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 16px 48px rgba(0,0,0,0.08)!important}
+[data-theme="dark"] #lC,[data-theme="dark"] #rC{box-shadow:0 16px 48px rgba(0,0,0,0.3)!important}
+.pc{width:50px!important;height:54px!important;border-radius:14px!important;font-size:20px!important;font-weight:800!important;text-align:center!important;transition:all .2s!important}
+.pc:focus{border-color:rgba(59,130,246,0.5)!important;box-shadow:0 0 0 3px rgba(59,130,246,0.1)!important;transform:scale(1.05)}
+.inp:focus{border-color:rgba(59,130,246,0.5)!important;box-shadow:0 0 0 3px rgba(59,130,246,0.1)!important}
 </style>
 </head>
 <body class="min-h-screen antialiased">
