@@ -489,6 +489,8 @@ function fSeaLoc(){const inp=document.getElementById('seaS');const raw=(inp?.val
 
 function updateHero(){const h=new Date().getHours();let g='Good morning';if(h>=12&&h<17)g='Good afternoon';else if(h>=17)g='Good evening';const name=cu?.name?.split(' ')[0]||'there';const el=document.getElementById('heroGreeting');if(el)el.innerHTML=g+', '+name+' <span style="background:none;-webkit-text-fill-color:initial">👋</span>';const sub=document.getElementById('heroSubtext');if(sub){const total=orders?.length||0;sub.textContent=total>0?`You have ${total} active orders to review across all zones`:'Manage your warehouse packing operations'}const t=document.getElementById('heroTime');if(t)t.textContent=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})+' · '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}
 
+async function loadUsersFromAPI(){try{const r=await fetch('/api/users');if(!r.ok)return;const d=await r.json();if(d.success&&Array.isArray(d.users)&&d.users.length>0){U.length=0;d.users.forEach(u=>U.push(u))}}catch(e){console.warn('User load failed, using defaults:',e.message)}}
+
 function initA(){
     const inp=$('acI');
     if(!inp) return;
@@ -742,7 +744,7 @@ $('sI').addEventListener('keydown',e=>{if(e.key==='Escape')clrS()});
 function uClk(){$('clk').textContent=new Date().toLocaleString('en-GB',{weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}uClk();setInterval(uClk,3e4);
 
 // Init
-loadUsersFromAPI().then(()=>{initA();setupInfiniteScroll()});
+loadUsersFromAPI().catch(()=>{}).finally(()=>{initA();setupInfiniteScroll()});
 
 setTimeout(loadAllOrders,100);setInterval(()=>{if(cu)loadAllOrders()},600000);// auto-load handles initial data
 </script>
