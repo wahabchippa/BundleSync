@@ -547,7 +547,28 @@ function csvQC(){const d=orders.filter(o=>o.zone_location==='PK QC Center');down
 function csvZone(){const d=orders.filter(o=>o.zone_location==='PK Zone');downloadCSV(d,'pk_zone_orders')}
 function csvSea(){downloadCSV(seaOrders,'sea_orders')}
 let _seaZone='all';function filterSeaZone(z){_seaZone=z;document.querySelectorAll('.sea-zf').forEach(b=>b.classList.toggle('sea-zf-on',b.dataset.sz===z));const filtered=z==='all'?seaOrders:seaOrders.filter(o=>o.zone_location===z);renderSeaOrders(filtered)}
-function fSeaLoc(){const inp=document.getElementById('seaS');const raw=(inp?.value||'').trim();if(!raw){renderSeaOrders(seaOrders);return}const nq=raw.toLowerCase().replace(/[\/\\_\-\s]+/g,'');const matchedOrderNums=new Set();seaOrders.forEach(o=>{const fid=(o.fleek_id||'').toLowerCase().replace(/[\/\\_\-\s]+/g,'');const onum=(o.order_number||'').toLowerCase().replace(/[\/\\_\-\s]+/g,'');const cname=(o.customer_name||'').toLowerCase().replace(/[\/\\_\-\s]+/g,'');if(fid.includes(nq)||onum.includes(nq)||cname.includes(nq))matchedOrderNums.add(o.order_number)});const filtered=seaOrders.filter(o=>matchedOrderNums.has(o.order_number));renderSeaOrders(filtered)}
+
+let selectedFid=null;
+document.addEventListener('click',e=>{
+const row=e.target.closest('tr[data-fid]');
+if(row){
+document.querySelectorAll('tr.row-selected').forEach(r=>r.classList.remove('row-selected'));
+row.classList.add('row-selected');
+selectedFid=row.dataset.fid;
+}
+});
+document.addEventListener('keydown',e=>{
+if(!selectedFid)return;
+if(!e.ctrlKey)return;
+const map={'c':'Complete','l':'Single dispatch lead time','d':'Single dispatch over weight','h':'Hold for bundling'};
+const key=e.key.toLowerCase();
+if(!map[key])return;
+e.preventDefault();
+const ns=map[key];
+const sel=$('st-'+selectedFid)||$('zst-'+selectedFid)||$('sst-'+selectedFid);
+if(sel){sel.value=ns;sel.dispatchEvent(new Event('change',{bubbles:true}))}
+else{const o=orders.find(x=>x.fleek_id===selectedFid);if(o){o.packing_status=ns;o.marking_updated_at=new Date().toISOString();saveLocal('orders',orders)}mSave(selectedFid,ns).then(()=>{toast('"'+ns+'"','success');uKPI()}).catch(err=>toast(err.message,'error'))}
+});function fSeaLoc(){const inp=document.getElementById('seaS');const raw=(inp?.value||'').trim();if(!raw){renderSeaOrders(seaOrders);return}const nq=raw.toLowerCase().replace(/[\/\\_\-\s]+/g,'');const matchedOrderNums=new Set();seaOrders.forEach(o=>{const fid=(o.fleek_id||'').toLowerCase().replace(/[\/\\_\-\s]+/g,'');const onum=(o.order_number||'').toLowerCase().replace(/[\/\\_\-\s]+/g,'');const cname=(o.customer_name||'').toLowerCase().replace(/[\/\\_\-\s]+/g,'');if(fid.includes(nq)||onum.includes(nq)||cname.includes(nq))matchedOrderNums.add(o.order_number)});const filtered=seaOrders.filter(o=>matchedOrderNums.has(o.order_number));renderSeaOrders(filtered)}
 
 function updateHero(){const h=new Date().getHours();let g='Good morning';if(h>=12&&h<17)g='Good afternoon';else if(h>=17)g='Good evening';const name=cu?.name?.split(' ')[0]||'there';const el=document.getElementById('heroGreeting');if(el)el.innerHTML=g+', '+name+' <span style="background:none;-webkit-text-fill-color:initial">👋</span>';const sub=document.getElementById('heroSubtext');if(sub){const total=orders?.length||0;sub.textContent=total>0?`You have ${total} active orders to review across all zones`:'Manage your warehouse packing operations'}const t=document.getElementById('heroTime');if(t)t.textContent=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})+' · '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}
 
