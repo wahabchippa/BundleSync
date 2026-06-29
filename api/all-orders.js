@@ -16,7 +16,7 @@ const CONFIG = {
   },
 };
 
-const BLOCKED_VENDORS = new Set(['fashion-fusion-2', 'alexprodshop']);
+const BLOCKED_VENDORS = new Set(['fashion-fusion-2', 'alexprodshop', 'walitest', 'testfaez']);
 
 const ALLOWED_STATUSES = new Set([
   'ACCEPTED', 'CREATED', 'PICKUP_READY', 'PICKUP_SUCCESSFULL',
