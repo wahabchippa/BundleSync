@@ -16,6 +16,8 @@ const CONFIG = {
   },
 };
 
+const BLOCKED_VENDORS = new Set(['fashion-fusion-2', 'alexprodshop']);
+
 const ALLOWED_STATUSES = new Set([
   'ACCEPTED', 'CREATED', 'PICKUP_READY', 'PICKUP_SUCCESSFULL',
   'QC_PENDING', 'QC_APPROVED', 'QC_HOLD', 'PICKUP_FAILED', 'FIRST_REPLACEMENT'
@@ -32,7 +34,7 @@ const COLUMN_MAP = {
 };
 
 let cache = { data: null, timestamp: 0 };
-const CACHE_TTL_MS = 5 * 60 * 1000;
+const CACHE_TTL_MS = 10 * 60 * 1000;
 
 let sheetsClient = null;
 async function getSheets() {
@@ -80,6 +82,8 @@ async function fetchFreshData() {
     const latest_status = clean(r[COLUMN_MAP.latest_status]);
     const qty = num(r[COLUMN_MAP.quantity_sold]);
     const hasMarking = markedFleekIds.has(fleek_id);
+    const vendor_val = clean(r[COLUMN_MAP.vendor]);
+    if (vendor_val && BLOCKED_VENDORS.has(vendor_val.toLowerCase())) return null;
     const statusOk = latest_status && ALLOWED_STATUSES.has(latest_status.toUpperCase());
 
     // Status OK + qty OK
@@ -105,7 +109,7 @@ async function fetchFreshData() {
       vendor_zone: clean(r[COLUMN_MAP.vendor_zone]),
       is_zone_vendor: bool(r[COLUMN_MAP.is_zone_vendor]),
       bargain_bin_flag: bool(r[COLUMN_MAP.bargain_bin_flag]),
-      zone_location: clean(r[COLUMN_MAP.zone_location]),
+      zone_location: (function(){const v=clean(r[COLUMN_MAP.zone_location]);return (!v||v.toLowerCase()==='false')?'ROW':v})(),
       packing_status: markings[fleek_id]?.packing_status || 'Pending',
       marking_updated_at: markings[fleek_id]?.updated_at || null,
       marking_updated_by: markings[fleek_id]?.marked_by || null,
