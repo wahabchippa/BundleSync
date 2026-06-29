@@ -89,7 +89,7 @@ async function fetchSeaOrders() {
 
     return {
       fleek_id,
-      order_number,
+      order_number: clean(r[COLUMN_MAP.order_number]),
       customer_id: clean(r[COLUMN_MAP.customer_id]),
       customer_name: clean(r[COLUMN_MAP.customer_name]),
       customer_country: clean(r[COLUMN_MAP.customer_country]),
