@@ -34,7 +34,7 @@ const COLUMN_MAP = {
 };
 
 let cache = { data: null, timestamp: 0 };
-const CACHE_TTL_MS = 10 * 60 * 1000;
+const CACHE_TTL_MS = 30 * 60 * 1000;
 
 let sheetsClient = null;
 async function getSheets() {
