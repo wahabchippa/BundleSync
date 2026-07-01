@@ -84,11 +84,19 @@ async function fetchFreshData() {
 
     const { data } = await sb
       .from('order_markings')
-      .select('fleek_id, packing_status, marked_by, updated_at, bundle_id');
+      .select('fleek_id, packing_status, marking_text, marked_by, updated_at, bundle_id');
 
     (data || []).forEach(m => {
       markings[m.fleek_id] = m;
-      markedFleekIds.add(m.fleek_id);
+
+      const hasManualMarking =
+        !!m.marking_text ||
+        !!m.marked_by ||
+        (m.packing_status && m.packing_status !== 'Pending');
+
+      if (hasManualMarking) {
+        markedFleekIds.add(m.fleek_id);
+      }
     });
   }
 

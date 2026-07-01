@@ -191,21 +191,6 @@ export default async function handler(req, res) {
       for (const subGroup of timeSubGroups) {
         if (subGroup.length < 2) {
           results.ignored_singletons += subGroup.length;
-
-          for (const order of subGroup) {
-            if (!markingsMap[order.fleek_id]) {
-              await supabase.from("order_markings").upsert(
-                {
-                  fleek_id: order.fleek_id,
-                  packing_status: "Pending",
-                  bundle_id: null,
-                  updated_at: new Date().toISOString(),
-                },
-                { onConflict: "fleek_id" }
-              );
-            }
-          }
-
           continue;
         }
 
@@ -229,7 +214,7 @@ export default async function handler(req, res) {
 
         for (const order of subGroup) {
           const existingMarking = markingsMap[order.fleek_id];
-          const packingStatus = existingMarking?.packing_status || "Hold for bundling";
+          const packingStatus = existingMarking?.packing_status || "Pending";
 
           const { error: upsertError } = await supabase.from("order_markings").upsert(
             {
