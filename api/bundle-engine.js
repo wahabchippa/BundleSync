@@ -12,12 +12,29 @@ function generateBundleId(customerKey) {
   return `BND-${clean}-${timestamp}`.toUpperCase();
 }
 
+function normalizeCustomerId(v) {
+  const s = String(v || "").trim();
+  if (!s || s.toLowerCase() === "unknown" || s === "-") return null;
+  return s;
+}
+
+function normalizeName(v) {
+  const s = String(v || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return s || null;
+}
+
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") return res.status(200).end();
+
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -29,48 +46,106 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "orders array required" });
     }
 
+    const nameToIds = {};
+    orders.forEach((order) => {
+      const id = normalizeCustomerId(order.customer_id);
+      const name = normalizeName(order.customer_name);
+
+      if (id && name) {
+        if (!nameToIds[name]) nameToIds[name] = new Set();
+        nameToIds[name].add(id);
+      }
+    });
+
     const groups = {};
     orders.forEach((order) => {
-      const key = order.customer_name
-        ? "NAME:" + order.customer_name.trim().toLowerCase()
-        : "ID:" + (order.customer_id || "UNKNOWN");
+      const id = normalizeCustomerId(order.customer_id);
+      const name = normalizeName(order.customer_name);
+
+      let key;
+
+      if (id) {
+        key = "ID:" + id;
+      } else if (name && nameToIds[name] && nameToIds[name].size === 1) {
+        const knownId = [...nameToIds[name]][0];
+        key = "ID:" + knownId;
+      } else if (name) {
+        key = "NAME:" + name;
+      } else {
+        key = "UNKNOWN:" + order.fleek_id;
+      }
 
       if (!groups[key]) groups[key] = [];
       groups[key].push(order);
     });
 
-    const results = { created: 0, updated: 0, locked_skipped: 0, errors: [] };
+    const results = {
+      created: 0,
+      updated: 0,
+      locked_skipped: 0,
+      ignored_singletons: 0,
+      errors: []
+    };
 
     for (const [customerKey, customerOrders] of Object.entries(groups)) {
-      if (customerOrders.length < 2) continue;
+      if (customerOrders.length < 2) {
+        results.ignored_singletons++;
+        continue;
+      }
 
-      const fleekIds = customerOrders.map((o) => o.fleek_id);
+      const fleekIds = customerOrders.map((o) => o.fleek_id).filter(Boolean);
 
-      const { data: existingMarkings } = await supabase
+      const { data: existingMarkings, error: existingMarkingsError } = await supabase
         .from("order_markings")
-        .select("fleek_id, bundle_id")
-        .in("fleek_id", fleekIds)
-        .not("bundle_id", "is", null);
+        .select("fleek_id, bundle_id, packing_status")
+        .in("fleek_id", fleekIds);
 
-      let existingBundleId = existingMarkings?.[0]?.bundle_id || null;
+      if (existingMarkingsError) {
+        results.errors.push(`Existing markings fetch error for ${customerKey}: ${existingMarkingsError.message}`);
+        continue;
+      }
+
+      const existingBundleIds = [
+        ...new Set(
+          (existingMarkings || [])
+            .map((m) => m.bundle_id)
+            .filter(Boolean)
+        )
+      ];
+
+      if (existingBundleIds.length > 1) {
+        results.errors.push(`Multiple bundle IDs found for ${customerKey}: ${existingBundleIds.join(", ")}`);
+        continue;
+      }
+
+      let existingBundleId = existingBundleIds[0] || null;
 
       if (existingBundleId) {
-        const { data: bundleData } = await supabase
+        const { data: bundleData, error: bundleFetchError } = await supabase
           .from("order_bundles")
           .select("is_locked, status")
           .eq("bundle_id", existingBundleId)
           .single();
 
-        if (bundleData?.is_locked || bundleData?.status === "Complete") {
-          results.locked_skipped++;
-          console.log(`Bundle ${existingBundleId} is locked. Skipping.`);
+        if (bundleFetchError) {
+          results.errors.push(`Bundle fetch error for ${existingBundleId}: ${bundleFetchError.message}`);
           continue;
         }
 
-        await supabase
+        if (bundleData?.is_locked || bundleData?.status === "Complete") {
+          results.locked_skipped++;
+          continue;
+        }
+
+        const { error: bundleUpdateError } = await supabase
           .from("order_bundles")
           .update({ updated_at: new Date().toISOString() })
           .eq("bundle_id", existingBundleId);
+
+        if (bundleUpdateError) {
+          results.errors.push(`Bundle update error for ${existingBundleId}: ${bundleUpdateError.message}`);
+          continue;
+        }
 
         results.updated++;
       } else {
@@ -82,13 +157,13 @@ export default async function handler(req, res) {
           .insert({
             bundle_id: newBundleId,
             customer_name: customerName,
-            customer_id: customerOrders[0].customer_id,
+            customer_id: customerOrders[0].customer_id || null,
             status: "Pending",
             is_locked: false,
           });
 
         if (bundleError) {
-          results.errors.push(`Bundle create error: ${bundleError.message}`);
+          results.errors.push(`Bundle create error for ${customerKey}: ${bundleError.message}`);
           continue;
         }
 
@@ -97,17 +172,24 @@ export default async function handler(req, res) {
       }
 
       for (const order of customerOrders) {
-        await supabase
+        const existingMarking = (existingMarkings || []).find((m) => m.fleek_id === order.fleek_id);
+        const packingStatusToSave = existingMarking?.packing_status || "Hold for bundling";
+
+        const { error: upsertError } = await supabase
           .from("order_markings")
           .upsert(
             {
               fleek_id: order.fleek_id,
               bundle_id: existingBundleId,
-              packing_status: "Hold for bundling",
+              packing_status: packingStatusToSave,
               updated_at: new Date().toISOString(),
             },
             { onConflict: "fleek_id" }
           );
+
+        if (upsertError) {
+          results.errors.push(`Order upsert error for ${order.fleek_id}: ${upsertError.message}`);
+        }
       }
     }
 

@@ -39,7 +39,11 @@ const CACHE_TTL_MS = 30 * 60 * 1000;
 let sheetsClient = null;
 async function getSheets() {
   if (sheetsClient) return sheetsClient;
-  const oauth = new google.auth.OAuth2(CONFIG.google.clientId, CONFIG.google.clientSecret, 'https://developers.google.com/oauthplayground');
+  const oauth = new google.auth.OAuth2(
+    CONFIG.google.clientId,
+    CONFIG.google.clientSecret,
+    'https://developers.google.com/oauthplayground'
+  );
   oauth.setCredentials({ refresh_token: CONFIG.google.refreshToken });
   await oauth.getAccessToken();
   sheetsClient = google.sheets({ version: 'v4', auth: oauth });
@@ -48,22 +52,46 @@ async function getSheets() {
 
 function clean(v) { return v == null || v === '' ? null : String(v).trim(); }
 function num(v) { const n = Number(v); return isNaN(n) ? null : n; }
-function bool(v) { const s = String(v || '').toLowerCase().trim(); return s === 'true' || s === 'yes' || s === '1'; }
+function bool(v) {
+  const s = String(v || '').toLowerCase().trim();
+  return s === 'true' || s === 'yes' || s === '1';
+}
+
+function normalizeCustomerId(v) {
+  const s = String(v || '').trim();
+  if (!s || s.toLowerCase() === 'unknown' || s === '-') return null;
+  return s;
+}
+
+function normalizeName(v) {
+  const s = String(v || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  return s || null;
+}
 
 async function fetchFreshData() {
-  // 1. Get markings from Supabase
   let markings = {};
   let markedFleekIds = new Set();
+
   if (CONFIG.supabase.url && CONFIG.supabase.serviceKey) {
-    const sb = createClient(CONFIG.supabase.url, CONFIG.supabase.serviceKey, { auth: { autoRefreshToken: false, persistSession: false } });
-    const { data } = await sb.from('order_markings').select('fleek_id, packing_status, marked_by, updated_at');
+    const sb = createClient(CONFIG.supabase.url, CONFIG.supabase.serviceKey, {
+      auth: { autoRefreshToken: false, persistSession: false }
+    });
+
+    const { data } = await sb
+      .from('order_markings')
+      .select('fleek_id, packing_status, marked_by, updated_at, bundle_id');
+
     (data || []).forEach(m => {
       markings[m.fleek_id] = m;
       markedFleekIds.add(m.fleek_id);
     });
   }
 
-  // 2. Fetch sheet
   const client = await getSheets();
   const resp = await client.spreadsheets.values.get({
     spreadsheetId: CONFIG.google.spreadsheetId,
@@ -74,7 +102,6 @@ async function fetchFreshData() {
 
   const rows = (resp.data.values || []).slice(1);
 
-  // 3. FILTER 1 (Status) + FILTER 2 (Quantity ≤ 100) + has marking exception
   let filteredOrders = rows.map(r => {
     const fleek_id = clean(r[COLUMN_MAP.fleek_id]);
     if (!fleek_id) return null;
@@ -83,14 +110,13 @@ async function fetchFreshData() {
     const qty = num(r[COLUMN_MAP.quantity_sold]);
     const hasMarking = markedFleekIds.has(fleek_id);
     const vendor_val = clean(r[COLUMN_MAP.vendor]);
-    if (vendor_val && BLOCKED_VENDORS.has(vendor_val.toLowerCase())) return null;
-    const statusOk = latest_status && ALLOWED_STATUSES.has(latest_status.toUpperCase());
 
-    // Status OK + qty OK
+    if (vendor_val && BLOCKED_VENDORS.has(vendor_val.toLowerCase())) return null;
+
+    const statusOk = latest_status && ALLOWED_STATUSES.has(latest_status.toUpperCase());
     const isCancelled = latest_status && /cancel/i.test(latest_status);
     const qualifiesByStatus = statusOk && !isCancelled && (qty == null || qty <= MAX_QUANTITY);
 
-    // Always include if has marking (even if qty > 100 or status changed)
     if (!qualifiesByStatus && !hasMarking) return null;
 
     return {
@@ -110,30 +136,68 @@ async function fetchFreshData() {
       vendor_zone: clean(r[COLUMN_MAP.vendor_zone]),
       is_zone_vendor: bool(r[COLUMN_MAP.is_zone_vendor]),
       bargain_bin_flag: bool(r[COLUMN_MAP.bargain_bin_flag]),
-      zone_location: (function(){const v=clean(r[COLUMN_MAP.zone_location]);return (!v||v.toLowerCase()==='false')?'ROW':v})(),
+      zone_location: (function () {
+        const v = clean(r[COLUMN_MAP.zone_location]);
+        return (!v || v.toLowerCase() === 'false') ? 'ROW' : v;
+      })(),
       packing_status: markings[fleek_id]?.packing_status || 'Pending',
       marking_updated_at: markings[fleek_id]?.updated_at || null,
       marking_updated_by: markings[fleek_id]?.marked_by || null,
+      bundle_id: markings[fleek_id]?.bundle_id || null,
       _has_marking: hasMarking,
     };
   }).filter(Boolean);
 
-  // 4. FILTER 3: Group by customer (name preferred, fallback to id), keep only customers with 2+ orders
+  const nameToIds = {};
+  filteredOrders.forEach(o => {
+    const id = normalizeCustomerId(o.customer_id);
+    const name = normalizeName(o.customer_name);
+
+    if (id && name) {
+      if (!nameToIds[name]) nameToIds[name] = new Set();
+      nameToIds[name].add(id);
+    }
+  });
+
   const groups = {};
   filteredOrders.forEach(o => {
-    const key = (o.customer_name && o.customer_name.trim())
-      ? 'NAME:' + o.customer_name.trim().toLowerCase()
-      : 'ID:' + (o.customer_id || 'UNKNOWN');
+    const id = normalizeCustomerId(o.customer_id);
+    const name = normalizeName(o.customer_name);
+
+    let key;
+    let match_basis;
+
+    if (id) {
+      key = 'ID:' + id;
+      match_basis = 'customer_id';
+    } else if (name && nameToIds[name] && nameToIds[name].size === 1) {
+      const knownId = [...nameToIds[name]][0];
+      key = 'ID:' + knownId;
+      match_basis = 'name_to_known_customer_id';
+    } else if (name) {
+      key = 'NAME:' + name;
+      match_basis = 'customer_name';
+    } else {
+      key = 'UNKNOWN:' + o.fleek_id;
+      match_basis = 'unknown';
+    }
+
+    o.bundle_group_key = key;
+    o.bundle_match_basis = match_basis;
+
     if (!groups[key]) groups[key] = [];
     groups[key].push(o);
   });
 
   const finalOrders = [];
   Object.values(groups).forEach(group => {
-    // Keep if 2+ orders OR any order has marking
     const hasMarkedOrder = group.some(o => o._has_marking);
-    if (group.length >= MIN_ORDERS_PER_CUSTOMER || hasMarkedOrder) {
+    const isBundleCandidate = group.length >= MIN_ORDERS_PER_CUSTOMER || hasMarkedOrder;
+
+    if (isBundleCandidate) {
       group.forEach(o => {
+        o.bundle_group_size = group.length;
+        o.bundle_candidate = true;
         delete o._has_marking;
         finalOrders.push(o);
       });
