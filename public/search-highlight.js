@@ -57,6 +57,7 @@
   }
 
   function clearHighlights() {
+    highlightTerm._lastScrolledTerm = null;
     document.querySelectorAll(`mark[${HIGHLIGHT_MARK_ATTR}="1"]`).forEach(mark => {
       const parent = mark.parentNode;
       if (!parent) return;
@@ -162,7 +163,8 @@
       textNode.parentNode.replaceChild(frag, textNode);
     });
 
-    if (firstMark) {
+    if (firstMark && highlightTerm._lastScrolledTerm !== term) {
+      highlightTerm._lastScrolledTerm = term;
       firstMark.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   }
@@ -187,7 +189,13 @@
 
     const observer = new MutationObserver(() => {
       if (currentTerm) {
-        scheduleHighlight(currentTerm);
+        // Sirf highlight karo, scroll mat karo
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+          const savedScroll = highlightTerm._lastScrolledTerm;
+          highlightTerm(currentTerm);
+          highlightTerm._lastScrolledTerm = savedScroll;
+        }, 250);
       }
     });
 
