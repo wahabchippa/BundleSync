@@ -1,9 +1,13 @@
 (() => {
   const HIGHLIGHT_MARK_ATTR = 'data-bundlesync-search-mark';
   const HIT_CLASS = 'bundlesync-search-hit';
-  let currentTerm = '';
-  let debounceTimer = null;
-  let observerStarted = false;
+
+  const state = {
+    currentTerm: '',
+    lastScrolledTerm: '',
+    debounceTimer: null,
+    observerStarted: false
+  };
 
   function injectStyles() {
     if (document.getElementById('bundlesync-search-highlight-styles')) return;
@@ -57,7 +61,6 @@
   }
 
   function clearHighlights() {
-    highlightTerm._lastScrolledTerm = null;
     document.querySelectorAll(`mark[${HIGHLIGHT_MARK_ATTR}="1"]`).forEach(mark => {
       const parent = mark.parentNode;
       if (!parent) return;
@@ -79,15 +82,16 @@
 
   function findRowContainer(el) {
     if (!el) return null;
-    return el.closest(
-      'tr, .order-row, .bundle-row, .table-row, .order-card, .bundle-card, .card, li'
-    );
+    return el.closest('tr, .order-row, .bundle-row, .table-row, .order-card, .bundle-card, .card, li');
   }
 
-  function highlightTerm(term) {
+  function highlightTerm(term, shouldScroll) {
     clearHighlights();
 
-    if (!term) return;
+    if (!term) {
+      state.lastScrolledTerm = '';
+      return;
+    }
 
     injectStyles();
 
@@ -163,38 +167,39 @@
       textNode.parentNode.replaceChild(frag, textNode);
     });
 
-    if (firstMark && highlightTerm._lastScrolledTerm !== term) {
-      highlightTerm._lastScrolledTerm = term;
+    if (shouldScroll && firstMark && state.lastScrolledTerm !== term) {
+      state.lastScrolledTerm = term;
       firstMark.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   }
 
-  function scheduleHighlight(term) {
-    currentTerm = normalizeTerm(term);
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => highlightTerm(currentTerm), 180);
+  function scheduleHighlight(term, shouldScroll) {
+    state.currentTerm = normalizeTerm(term);
+
+    clearTimeout(state.debounceTimer);
+    state.debounceTimer = setTimeout(() => {
+      highlightTerm(state.currentTerm, !!shouldScroll);
+    }, 180);
   }
 
   function captureExistingSearchValue() {
     const inputs = Array.from(document.querySelectorAll('input, textarea')).filter(isSearchInput);
     const filled = inputs.find(i => normalizeTerm(i.value));
     if (filled) {
-      scheduleHighlight(filled.value);
+      state.currentTerm = normalizeTerm(filled.value);
+      highlightTerm(state.currentTerm, false);
     }
   }
 
   function startObserver() {
-    if (observerStarted) return;
-    observerStarted = true;
+    if (state.observerStarted) return;
+    state.observerStarted = true;
 
     const observer = new MutationObserver(() => {
-      if (currentTerm) {
-        // Sirf highlight karo, scroll mat karo
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => {
-          const savedScroll = highlightTerm._lastScrolledTerm;
-          highlightTerm(currentTerm);
-          highlightTerm._lastScrolledTerm = savedScroll;
+      if (state.currentTerm) {
+        clearTimeout(state.debounceTimer);
+        state.debounceTimer = setTimeout(() => {
+          highlightTerm(state.currentTerm, false);
         }, 250);
       }
     });
@@ -207,13 +212,13 @@
 
   document.addEventListener('input', (e) => {
     if (isSearchInput(e.target)) {
-      scheduleHighlight(e.target.value);
+      scheduleHighlight(e.target.value, true);
     }
   }, true);
 
   document.addEventListener('change', (e) => {
     if (isSearchInput(e.target)) {
-      scheduleHighlight(e.target.value);
+      scheduleHighlight(e.target.value, true);
     }
   }, true);
 
