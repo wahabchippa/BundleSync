@@ -7,7 +7,8 @@
     lastScrolledTerm: '',
     pendingScroll: false,
     debounceTimer: null,
-    observerStarted: false
+    observerStarted: false,
+    scrollRetryTimer: null
   };
 
   function injectStyles() {
@@ -86,7 +87,7 @@
     return el.closest('tr, .order-row, .bundle-row, .table-row, .order-card, .bundle-card, .card, li');
   }
 
-  function highlightTerm(term, shouldScroll) {
+  function highlightTerm(term) {
     clearHighlights();
 
     if (!term) {
@@ -131,8 +132,6 @@
       textNodes.push(node);
     }
 
-    let firstMark = null;
-
     textNodes.forEach(textNode => {
       const text = textNode.nodeValue;
       regex.lastIndex = 0;
@@ -153,8 +152,6 @@
         mark.textContent = match[0];
         frag.appendChild(mark);
 
-        if (!firstMark) firstMark = mark;
-
         const row = findRowContainer(textNode.parentElement);
         if (row) row.classList.add(HIT_CLASS);
 
@@ -168,26 +165,63 @@
 
       textNode.parentNode.replaceChild(frag, textNode);
     });
+  }
 
-    if (shouldScroll && firstMark && state.lastScrolledTerm !== term) {
+  function tryScrollToFirstHit(term, attempt = 0) {
+    clearTimeout(state.scrollRetryTimer);
+
+    if (!state.pendingScroll) return;
+    if (!term) return;
+    if (state.lastScrolledTerm === term) {
+      state.pendingScroll = false;
+      return;
+    }
+
+    const firstMark = document.querySelector(`mark[${HIGHLIGHT_MARK_ATTR}="1"]`);
+    const firstRow = document.querySelector('.' + HIT_CLASS);
+    const target = firstRow || firstMark;
+
+    if (target) {
       state.lastScrolledTerm = term;
       state.pendingScroll = false;
-      firstMark.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    if (attempt < 12) {
+      state.scrollRetryTimer = setTimeout(() => {
+        tryScrollToFirstHit(term, attempt + 1);
+      }, 120);
     }
   }
 
-  function scheduleHighlight(term, wantsScroll) {
+  function runHighlight(term, wantsScroll) {
     state.currentTerm = normalizeTerm(term);
 
     if (!state.currentTerm) {
       state.pendingScroll = false;
-    } else if (wantsScroll) {
-      state.pendingScroll = true;
+      highlightTerm('');
+      return;
     }
 
+    if (wantsScroll) {
+      state.pendingScroll = true;
+      if (state.lastScrolledTerm !== state.currentTerm) {
+        state.lastScrolledTerm = '';
+      }
+    }
+
+    highlightTerm(state.currentTerm);
+
+    if (state.pendingScroll) {
+      tryScrollToFirstHit(state.currentTerm, 0);
+    }
+  }
+
+  function scheduleHighlight(term, wantsScroll) {
     clearTimeout(state.debounceTimer);
     state.debounceTimer = setTimeout(() => {
-      highlightTerm(state.currentTerm, state.pendingScroll);
+      runHighlight(term, wantsScroll);
     }, 180);
   }
 
@@ -196,8 +230,7 @@
     const filled = inputs.find(i => normalizeTerm(i.value));
     if (filled) {
       state.currentTerm = normalizeTerm(filled.value);
-      state.pendingScroll = false;
-      highlightTerm(state.currentTerm, false);
+      highlightTerm(state.currentTerm);
     }
   }
 
@@ -209,8 +242,11 @@
       if (state.currentTerm) {
         clearTimeout(state.debounceTimer);
         state.debounceTimer = setTimeout(() => {
-          highlightTerm(state.currentTerm, state.pendingScroll);
-        }, 250);
+          highlightTerm(state.currentTerm);
+          if (state.pendingScroll) {
+            tryScrollToFirstHit(state.currentTerm, 0);
+          }
+        }, 220);
       }
     });
 
