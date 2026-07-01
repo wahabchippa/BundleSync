@@ -5,6 +5,7 @@
   const state = {
     currentTerm: '',
     lastScrolledTerm: '',
+    pendingScroll: false,
     debounceTimer: null,
     observerStarted: false
   };
@@ -90,6 +91,7 @@
 
     if (!term) {
       state.lastScrolledTerm = '';
+      state.pendingScroll = false;
       return;
     }
 
@@ -169,16 +171,23 @@
 
     if (shouldScroll && firstMark && state.lastScrolledTerm !== term) {
       state.lastScrolledTerm = term;
+      state.pendingScroll = false;
       firstMark.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   }
 
-  function scheduleHighlight(term, shouldScroll) {
+  function scheduleHighlight(term, wantsScroll) {
     state.currentTerm = normalizeTerm(term);
+
+    if (!state.currentTerm) {
+      state.pendingScroll = false;
+    } else if (wantsScroll) {
+      state.pendingScroll = true;
+    }
 
     clearTimeout(state.debounceTimer);
     state.debounceTimer = setTimeout(() => {
-      highlightTerm(state.currentTerm, !!shouldScroll);
+      highlightTerm(state.currentTerm, state.pendingScroll);
     }, 180);
   }
 
@@ -187,6 +196,7 @@
     const filled = inputs.find(i => normalizeTerm(i.value));
     if (filled) {
       state.currentTerm = normalizeTerm(filled.value);
+      state.pendingScroll = false;
       highlightTerm(state.currentTerm, false);
     }
   }
@@ -199,7 +209,7 @@
       if (state.currentTerm) {
         clearTimeout(state.debounceTimer);
         state.debounceTimer = setTimeout(() => {
-          highlightTerm(state.currentTerm, false);
+          highlightTerm(state.currentTerm, state.pendingScroll);
         }, 250);
       }
     });
