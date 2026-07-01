@@ -15,16 +15,13 @@ let sheetsClient = null;
 
 async function getSheets() {
   if (sheetsClient) return sheetsClient;
-
   const oauth = new google.auth.OAuth2(
     CONFIG.google.clientId,
     CONFIG.google.clientSecret,
     "https://developers.google.com/oauthplayground"
   );
-
   oauth.setCredentials({ refresh_token: CONFIG.google.refreshToken });
   await oauth.getAccessToken();
-
   sheetsClient = google.sheets({ version: "v4", auth: oauth });
   return sheetsClient;
 }
@@ -44,17 +41,9 @@ export default async function handler(req, res) {
 
     const marker = String(resp.data.values?.[0]?.[0] || "").trim();
 
-    return res.status(200).json({
-      success: true,
-      marker,
-      cell: CONFIG.google.markerCell,
-      sheet: CONFIG.google.sheetName
-    });
+    return res.status(200).json({ success: true, marker });
   } catch (err) {
-    return res.status(500).json({
-      success: false,
-      error: err.message
-    });
+    return res.status(500).json({ success: false, error: err.message });
   }
 }
 
