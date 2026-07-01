@@ -1,7 +1,26 @@
 (() => {
-  const params = new URLSearchParams(window.location.search);
-  if (params.get('admin') !== '1') return;
+  // 1. ADMIN CHECK LOGIC
+  let isAdmin = false;
+  
+  try {
+    // Check localStorage to see if logged in user is admin or wahab
+    for (let i = 0; i < localStorage.length; i++) {
+      let key = localStorage.key(i);
+      let val = localStorage.getItem(key);
+      if (val && (val.includes('"wahab"') || val.includes('"admin"') || val.includes('"role":"admin"') || val.includes('"role": "admin"'))) {
+        isAdmin = true;
+        break;
+      }
+    }
+  } catch(e) {}
 
+  // Agar user admin nahi hai, toh button mat dikhao
+  if (!isAdmin) {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('admin') !== '1') return; // Emergency fallback
+  }
+
+  // 2. BUNDLE SYNC LOGIC
   const CHUNK_SIZE = 150;
   let running = false;
 
@@ -89,6 +108,7 @@
     return d;
   }
 
+  // 3. BUTTON UI
   const wrap = document.createElement('div');
   wrap.style.cssText = 'position:fixed;right:20px;bottom:20px;z-index:99999;background:#111827;color:#fff;padding:12px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.25);width:280px;font-family:Arial,sans-serif;';
 
