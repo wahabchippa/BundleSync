@@ -21,7 +21,7 @@
   }
 
   // 2. BUNDLE SYNC LOGIC
-  const CHUNK_SIZE = 150;
+  const CHUNK_SIZE = 50;
   let running = false;
 
   function normalizeCustomerId(v) {
@@ -103,7 +103,16 @@
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
     });
-    const d = await r.json();
+
+    const text = await r.text();
+    let d;
+
+    try {
+      d = JSON.parse(text);
+    } catch (e) {
+      throw new Error(text.slice(0, 200) || 'Non-JSON response from server');
+    }
+
     if (!r.ok) throw new Error(d.error || 'Request failed');
     return d;
   }
