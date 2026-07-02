@@ -123,6 +123,7 @@ body{background:var(--bg);color:var(--t1);transition:background .3s,color .3s;ma
 
 @keyframes heroIn{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
 @keyframes livePulse{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,0.6)}50%{box-shadow:0 0 0 6px rgba(16,185,129,0)}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 
 @media print{.np{display:none !important}body>*:not(#ps){display:none !important}#ps{display:block !important}}
 
@@ -367,12 +368,16 @@ body{background:var(--bg)!important;background-attachment:fixed!important}
   <div style="position:absolute;top:-50px;right:-50px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(99,102,241,0.08) 0%,transparent 70%);pointer-events:none"></div>
   <div style="position:absolute;bottom:-30px;left:-30px;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(236,72,153,0.06) 0%,transparent 70%);pointer-events:none"></div>
   <div style="position:relative">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap">
       <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;background:rgba(16,185,129,0.1);color:#10b981;font-size:11px;font-weight:700">
         <span style="width:6px;height:6px;border-radius:50%;background:#10b981;animation:livePulse 2s infinite"></span>
         Live · Connected
       </span>
       <span id="heroTime" style="font-size:11px;color:var(--t3);font-weight:500">—</span>
+      <span id="syncStatus" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;background:var(--s);color:var(--t3);font-size:11px;font-weight:600;border:1px solid var(--b);cursor:pointer;transition:all .2s" onclick="if(cu?.role==='Admin'||cu?.role==='Manager')triggerManualSync()" title="Click to sync now">
+        <svg id="syncIcon" class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        <span id="syncText">Checking...</span>
+      </span>
     </div>
     <h1 id="heroGreeting" style="font-size:34px;font-weight:800;letter-spacing:-0.03em;line-height:1.1;margin:0;background:linear-gradient(135deg,var(--t1) 0%,#6366f1 50%,#a855f7 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Welcome back 👋</h1>
     <p id="heroSubtext" style="font-size:14px;color:var(--t3);margin-top:6px;font-weight:500">Manage your warehouse packing operations</p>
@@ -619,6 +624,157 @@ function updateHero(){const h=new Date().getHours();let g='Good morning';if(h>=1
 
 async function loadUsersFromAPI(){try{const r=await fetch('/api/users');if(!r.ok)return;const d=await r.json();if(d.success&&Array.isArray(d.users)&&d.users.length>0){U.length=0;d.users.forEach(u=>U.push(u))}}catch(e){console.warn('User load failed, using defaults:',e.message)}}
 
+// ============================================================
+// AUTO SYNC SYSTEM
+// ============================================================
+const SYNC_INTERVAL_MS = 2 * 60 * 60 * 1000; // 2 hours
+let _syncRunning = false;
+
+function getLastSyncTime() {
+  const raw = localStorage.getItem('bs_last_sync');
+  return raw ? parseInt(raw, 10) : 0;
+}
+
+function setLastSyncTime(ts) {
+  localStorage.setItem('bs_last_sync', String(ts || Date.now()));
+}
+
+function formatSyncAgo(ms) {
+  const min = Math.floor(ms / 60000);
+  if (min < 1) return 'Just now';
+  if (min < 60) return min + 'm ago';
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return hr + 'h ago';
+  return Math.floor(hr / 24) + 'd ago';
+}
+
+function updateSyncBadge() {
+  const badge = $('syncStatus');
+  const text = $('syncText');
+  const icon = $('syncIcon');
+  if (!badge || !text) return;
+
+  const lastSync = getLastSyncTime();
+  const ago = Date.now() - lastSync;
+
+  if (_syncRunning) {
+    text.textContent = 'Syncing...';
+    badge.style.background = 'rgba(59,130,246,0.1)';
+    badge.style.color = '#60a5fa';
+    badge.style.borderColor = 'rgba(59,130,246,0.3)';
+    if (icon) icon.style.animation = 'spin 1s linear infinite';
+    return;
+  }
+
+  if (lastSync === 0) {
+    text.textContent = 'Never synced';
+    badge.style.background = 'rgba(239,68,68,0.1)';
+    badge.style.color = '#ef4444';
+    badge.style.borderColor = 'rgba(239,68,68,0.3)';
+  } else if (ago > SYNC_INTERVAL_MS) {
+    text.textContent = 'Sync ' + formatSyncAgo(ago);
+    badge.style.background = 'rgba(245,158,11,0.1)';
+    badge.style.color = '#f59e0b';
+    badge.style.borderColor = 'rgba(245,158,11,0.3)';
+  } else {
+    text.textContent = 'Sync ' + formatSyncAgo(ago);
+    badge.style.background = 'rgba(16,185,129,0.1)';
+    badge.style.color = '#10b981';
+    badge.style.borderColor = 'rgba(16,185,129,0.3)';
+  }
+  if (icon) icon.style.animation = '';
+}
+
+async function runAutoSync(force = false) {
+  if (_syncRunning) return;
+  if (!cu || (cu.role !== 'Admin' && cu.role !== 'Manager')) return;
+
+  const lastSync = getLastSyncTime();
+  const ago = Date.now() - lastSync;
+
+  if (!force && ago < SYNC_INTERVAL_MS) return;
+
+  _syncRunning = true;
+  updateSyncBadge();
+
+  try {
+    toast('Syncing bundles...', 'info');
+
+    const ordersData = await fetch('/api/all-orders?refresh=1').then(r => r.json());
+    const allOrders = ordersData.orders || [];
+
+    if (!allOrders.length) {
+      toast('No orders to sync', 'error');
+      return;
+    }
+
+    // Chunk by customer groups (same logic as admin-sync)
+    const CHUNK_SIZE = 50;
+    const groups = {};
+    allOrders.forEach(o => {
+      const id = (o.customer_id || '').trim();
+      const name = (o.customer_name || '').trim().toLowerCase();
+      const key = id || name || o.fleek_id;
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(o);
+    });
+
+    const chunks = [];
+    let current = [];
+    let count = 0;
+    for (const g of Object.values(groups)) {
+      if (count + g.length > CHUNK_SIZE && current.length > 0) {
+        chunks.push(current);
+        current = [];
+        count = 0;
+      }
+      current.push(...g);
+      count += g.length;
+    }
+    if (current.length) chunks.push(current);
+
+    let created = 0;
+    let errors = 0;
+
+    for (let i = 0; i < chunks.length; i++) {
+      const res = await fetch('/api/bundle-engine', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orders: chunks[i] })
+      }).then(r => r.json());
+
+      if (res.results) {
+        created += res.results.created || 0;
+        errors += (res.results.errors || []).length;
+      }
+    }
+
+    setLastSyncTime(Date.now());
+    toast(`Sync done: ${created} bundles created`, 'success');
+
+    // Refresh data silently
+    await loadAllOrders(true);
+
+  } catch (err) {
+    console.error('Auto sync failed:', err);
+    toast('Sync failed: ' + err.message, 'error');
+  } finally {
+    _syncRunning = false;
+    updateSyncBadge();
+  }
+}
+
+function triggerManualSync() {
+  if (!cu || (cu.role !== 'Admin' && cu.role !== 'Manager')) {
+    toast('Admin only', 'error');
+    return;
+  }
+  runAutoSync(true);
+}
+
+// Check sync status every minute
+setInterval(updateSyncBadge, 60000);
+
 function initA(){
     const inp=$('acI');
     if(!inp) return;
@@ -682,7 +838,7 @@ function initA(){
 function gP(){return['p1','p2','p3','p4'].map(id=>$(id)?.value||'').join('')}
 function cP(){['p1','p2','p3','p4'].forEach(id=>{const e=$(id);if(e){e.value='';e.classList.remove('err')}})}
 function doL(e){e.preventDefault();let uid=parseInt($('acV')?.value),pin=gP();if(!uid){const m=syncTypedUser();uid=m?.id}if(!uid||pin.length!==4)return;const u=U.find(x=>x.id===uid);if(!u)return;$('lB').disabled=true;$('lT').textContent='Signing in...';$('lSp')?.classList.remove('hidden');$('pE')?.classList.add('hidden');setTimeout(()=>{if(u.pin===pin){aOk(u,false)}else{['p1','p2','p3','p4'].forEach(id=>$(id)?.classList.add('err'));$('pR')?.classList.add('pks');$('pE')?.classList.remove('hidden');setTimeout(()=>{cP();$('pR')?.classList.remove('pks');$('p1')?.focus()},500)}$('lB').disabled=false;$('lT').textContent='Sign In';$('lSp')?.classList.add('hidden')},1e3)}
-function aOk(u,r){cu=u;sessionStorage.setItem('bs_u',JSON.stringify(u));if(!r)pL(`${u.name} logged in`);$('aw')?.classList.add('off');$('uP')?.classList.remove('hidden');$('sbU')?.classList.remove('hidden');$('uA').textContent=$('sbAv').textContent=u.name[0].toUpperCase();$('uN').textContent=u.name.split(' ')[0];$('sbNm').textContent=u.name;$('sbRl').textContent=u.role;if(u.role==='Admin')$('sbAd').style.display='flex';if(u.role==='Admin'||u.role==='Manager')$('sbLg').style.display='flex';updateHero();setInterval(updateHero,60000)}
+function aOk(u,r){cu=u;sessionStorage.setItem('bs_u',JSON.stringify(u));if(!r)pL(`${u.name} logged in`);$('aw')?.classList.add('off');$('uP')?.classList.remove('hidden');$('sbU')?.classList.remove('hidden');$('uA').textContent=$('sbAv').textContent=u.name[0].toUpperCase();$('uN').textContent=u.name.split(' ')[0];$('sbNm').textContent=u.name;$('sbRl').textContent=u.role;if(u.role==='Admin')$('sbAd').style.display='flex';if(u.role==='Admin'||u.role==='Manager')$('sbLg').style.display='flex';updateHero();updateSyncBadge();setInterval(updateHero,60000);if(u.role==='Admin'||u.role==='Manager'){setTimeout(()=>runAutoSync(false),2000)}}
 function logout(){if(cu)pL(`${cu.name} logged out`);cu=null;sessionStorage.removeItem('bs_u');cP();$('acI').value='';$('acV').value='';$('pS').style.opacity='.4';$('pS').style.pointerEvents='none';$('lB').disabled=true;$('aw')?.classList.remove('off');$('uP')?.classList.add('hidden');$('sbU')?.classList.add('hidden');$('sbAd').style.display='none';$('sbLg').style.display='none';hideDrop()}
 function authTog(show){const toReq=show?show==='request':$('rC')?.classList.contains('hidden');$('lC')?.classList.toggle('hidden',toReq);$('rC')?.classList.toggle('hidden',!toReq);$('rO')?.classList.add('hidden');$('uP')?.classList.remove('hidden');hideDrop()}
 function doR(e){e.preventDefault();const n=$('rN')?.value?.trim();if(!n||n.length<3)return;if(U.some(u=>u.name.toLowerCase()===n.toLowerCase())){toast('Exists','error');return}pend.push({name:n});pL(`Reg request: "${n}"`);$('rN').value='';$('rO')?.classList.remove('hidden')}
@@ -870,7 +1026,7 @@ loadUsersFromAPI().catch(()=>{}).finally(()=>{initA();setupInfiniteScroll()});
 setTimeout(loadAllOrders,100);setInterval(()=>{if(cu)loadAllOrders()},600000);// auto-load handles initial data
 </script>
 <script src="/snippets/auto-dump-sync.js"></script>
-<script src="/admin-sync.js"></script>
+
 <script src="/search-highlight.js"></script>
 <script src="/smooth-save.js"></script>
 </body>

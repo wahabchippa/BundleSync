@@ -9,11 +9,12 @@ const supabase = createClient(
 const BUNDLE_WINDOW_DAYS = 3;
 const MAX_BUNDLE_SIZE = 15;
 
-function generateBundleId(customerKey) {
+function generateBundleId(customerKey, partIndex = 0) {
   const timestamp = Date.now();
-  const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+  const random = Math.random().toString(36).substring(2, 6).toUpperCase();
   const clean = customerKey.replace(/[^a-z0-9]/gi, "").substring(0, 20);
-  return `BND-${clean}-${timestamp}-${random}`.toUpperCase();
+  const part = partIndex > 0 ? `-P${partIndex}` : '';
+  return `BND-${clean}-${timestamp}-${random}${part}`.toUpperCase();
 }
 
 function normalizeCustomerId(v) {
@@ -232,13 +233,15 @@ export default async function handler(req, res) {
         }
       }
 
+      let partIndex = 0;
       for (const subGroup of finalGroups) {
         if (subGroup.length < 2) {
           results.ignored_singletons += subGroup.length;
           continue;
         }
 
-        const newBundleId = generateBundleId(customerKey);
+        partIndex++;
+        const newBundleId = generateBundleId(customerKey, partIndex > 1 ? partIndex : 0);
         const customerName = subGroup[0].customer_name || customerKey;
 
         const { error: bundleError } = await supabase.from("order_bundles").insert({
