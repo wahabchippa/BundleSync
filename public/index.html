@@ -775,6 +775,13 @@ function triggerManualSync() {
 // Check sync status every minute
 setInterval(updateSyncBadge, 60000);
 
+// Background auto-sync every 30 minutes for Admin/Manager
+setInterval(() => {
+  if (cu && (cu.role === 'Admin' || cu.role === 'Manager')) {
+    runAutoSync(false);
+  }
+}, 30 * 60 * 1000);
+
 function initA(){
     const inp=$('acI');
     if(!inp) return;
@@ -1025,7 +1032,7 @@ loadUsersFromAPI().catch(()=>{}).finally(()=>{initA();setupInfiniteScroll()});
 
 setTimeout(loadAllOrders,100);setInterval(()=>{if(cu)loadAllOrders()},600000);// auto-load handles initial data
 </script>
-<script src="/snippets/auto-dump-sync.js"></script>
+
 
 <script src="/search-highlight.js"></script>
 <script src="/smooth-save.js"></script>
