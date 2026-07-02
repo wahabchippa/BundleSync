@@ -1,23 +1,23 @@
 (() => {
-  // 1. ADMIN CHECK LOGIC
+  // 1. ADMIN CHECK LOGIC — reads from sessionStorage where auth system stores user
   let isAdmin = false;
-  
+
   try {
-    // Check localStorage to see if logged in user is admin or wahab
-    for (let i = 0; i < localStorage.length; i++) {
-      let key = localStorage.key(i);
-      let val = localStorage.getItem(key);
-      if (val && (val.includes('"wahab"') || val.includes('"admin"') || val.includes('"role":"admin"') || val.includes('"role": "admin"'))) {
+    const raw = sessionStorage.getItem('bs_u');
+    if (raw) {
+      const user = JSON.parse(raw);
+      if (user && (user.role === 'Admin' || user.role === 'Manager')) {
         isAdmin = true;
-        break;
       }
     }
-  } catch(e) {}
+  } catch (e) {
+    // silent fail
+  }
 
-  // Agar user admin nahi hai, toh button mat dikhao
+  // Emergency fallback via URL param
   if (!isAdmin) {
     const params = new URLSearchParams(window.location.search);
-    if (params.get('admin') !== '1') return; // Emergency fallback
+    if (params.get('admin') !== '1') return;
   }
 
   // 2. BUNDLE SYNC LOGIC
@@ -106,7 +106,6 @@
 
     const text = await r.text();
     let d;
-
     try {
       d = JSON.parse(text);
     } catch (e) {
@@ -152,6 +151,7 @@
         locked_skipped: 0,
         ignored_singletons: 0,
         time_window_splits: 0,
+        already_bundled_skipped: 0,
         errors: []
       };
 
@@ -165,6 +165,7 @@
         merged.locked_skipped += Number(r.locked_skipped || 0);
         merged.ignored_singletons += Number(r.ignored_singletons || 0);
         merged.time_window_splits += Number(r.time_window_splits || 0);
+        merged.already_bundled_skipped += Number(r.already_bundled_skipped || 0);
 
         if (Array.isArray(r.errors) && r.errors.length) {
           merged.errors.push(...r.errors);
@@ -174,7 +175,8 @@
       status.textContent =
         'Done. Bundles: ' + merged.created +
         ', Singles: ' + merged.ignored_singletons +
-        ', Locked skipped: ' + merged.locked_skipped;
+        ', Locked skipped: ' + merged.locked_skipped +
+        ', Already bundled: ' + merged.already_bundled_skipped;
 
       console.log('Admin sync result:', merged);
       alert('Sync complete');

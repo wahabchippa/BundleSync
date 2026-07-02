@@ -10,7 +10,7 @@ const CONFIG = {
     clientId: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
-    spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID || '13gjj21TS80z2HdNzWxl5Ciftfutd_4sHyEy_yJjvebM',
+    spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID,
     sheetName: process.env.GOOGLE_SHEET_NAME || 'RAW DATA',
     range: 'A:CZ',
   },
@@ -173,6 +173,10 @@ function extractRowData(row) {
 // ============================================================
 
 async function fetchSheetData() {
+  if (!CONFIG.google.spreadsheetId) {
+    throw new Error('GOOGLE_SPREADSHEET_ID environment variable is not set');
+  }
+
   const client = await getGoogleSheetsClient();
 
   const response = await client.spreadsheets.values.get({
@@ -350,8 +354,8 @@ export default async function handler(req, res) {
 
     const zoneCounts = {
       all: ordersWithMarkings.length,
-      pk_qc_center: ordersWithMarkings.filter(o => o.zone_location === 'PK QC Center').length,
-      pk_zone: ordersWithMarkings.filter(o => o.zone_location === 'PK Zone').length,
+      pk_qc_center: ordersWithMarkings.filter(o => (o.zone_location || '').trim() === 'PK QC Center').length,
+      pk_zone: ordersWithMarkings.filter(o => (o.zone_location || '').trim() === 'PK Zone').length,
     };
 
     const statusCounts = {

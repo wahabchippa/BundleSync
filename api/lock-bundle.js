@@ -24,7 +24,8 @@ export default async function handler(req, res) {
     }
 
     const is_locked = action === "lock" ? true : false;
-    const status = action === "lock" ? "Complete" : "Pending";
+    // Keep existing status — don't auto-change to Complete on lock
+    const status = action === "lock" ? "Locked" : "Pending";
 
     const { data, error } = await supabase
       .from("order_bundles")

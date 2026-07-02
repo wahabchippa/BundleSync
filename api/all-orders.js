@@ -6,7 +6,7 @@ const CONFIG = {
     clientId: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
-    spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID || '13gjj21TS80z2HdNzWxl5Ciftfutd_4sHyEy_yJjvebM',
+    spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID,
     sheetName: process.env.GOOGLE_SHEET_NAME || 'RAW DATA',
     range: 'A:CZ',
   },
@@ -74,6 +74,10 @@ function normalizeName(v) {
 }
 
 async function fetchFreshData() {
+  if (!CONFIG.google.spreadsheetId) {
+    throw new Error('GOOGLE_SPREADSHEET_ID environment variable is not set');
+  }
+
   let markings = {};
   let markedFleekIds = new Set();
 

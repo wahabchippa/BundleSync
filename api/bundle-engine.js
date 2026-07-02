@@ -10,8 +10,9 @@ const BUNDLE_WINDOW_DAYS = 3;
 
 function generateBundleId(customerKey) {
   const timestamp = Date.now();
+  const random = Math.random().toString(36).substring(2, 8).toUpperCase();
   const clean = customerKey.replace(/[^a-z0-9]/gi, "").substring(0, 20);
-  return `BND-${clean}-${timestamp}`.toUpperCase();
+  return `BND-${clean}-${timestamp}-${random}`.toUpperCase();
 }
 
 function normalizeCustomerId(v) {
@@ -41,6 +42,11 @@ function daysDiff(d1, d2) {
   return Math.abs((d1 - d2) / msPerDay);
 }
 
+/**
+ * Group orders into bundles where ALL orders in a group are within
+ * windowDays of at least one other order in the same group.
+ * Uses a clustering approach instead of naive consecutive comparison.
+ */
 function groupOrdersByTimeWindow(orders, windowDays) {
   if (orders.length < 2) return [orders];
 
@@ -57,14 +63,25 @@ function groupOrdersByTimeWindow(orders, windowDays) {
   let currentGroup = [orders[0]];
 
   for (let i = 1; i < orders.length; i++) {
-    const prevDate = parseDate(orders[i - 1].created_at);
-    const currDate = parseDate(orders[i].created_at);
+    const currOrder = orders[i];
+    const currDate = parseDate(currOrder.created_at);
 
-    if (daysDiff(prevDate, currDate) <= windowDays) {
-      currentGroup.push(orders[i]);
+    // Check if current order is within window of ANY order in current group
+    // (not just the previous one)
+    let fitsInGroup = false;
+    for (const groupOrder of currentGroup) {
+      const groupDate = parseDate(groupOrder.created_at);
+      if (daysDiff(groupDate, currDate) <= windowDays) {
+        fitsInGroup = true;
+        break;
+      }
+    }
+
+    if (fitsInGroup) {
+      currentGroup.push(currOrder);
     } else {
       subGroups.push(currentGroup);
-      currentGroup = [orders[i]];
+      currentGroup = [currOrder];
     }
   }
 
@@ -106,6 +123,7 @@ export default async function handler(req, res) {
     });
 
     const lockedBundleIds = new Set();
+    const unlockedBundleIds = new Set();
 
     const bundleIdsToCheck = [
       ...new Set(
@@ -128,15 +146,21 @@ export default async function handler(req, res) {
       (bundlesData || []).forEach((b) => {
         if (b.is_locked || b.status === "Complete") {
           lockedBundleIds.add(b.bundle_id);
+        } else {
+          unlockedBundleIds.add(b.bundle_id);
         }
       });
     }
 
+    // Filter out orders in locked bundles AND orders already in unlocked bundles
+    // (to prevent duplicate bundle creation)
     const eligibleOrders = orders.filter((o) => {
       const marking = markingsMap[o.fleek_id];
       if (!marking) return true;
       if (!marking.bundle_id) return true;
       if (lockedBundleIds.has(marking.bundle_id)) return false;
+      // Skip orders already in unlocked bundles
+      if (unlockedBundleIds.has(marking.bundle_id)) return false;
       return true;
     });
 
@@ -178,8 +202,13 @@ export default async function handler(req, res) {
       locked_skipped: 0,
       ignored_singletons: 0,
       time_window_splits: 0,
+      already_bundled_skipped: 0,
       errors: []
     };
+
+    // Count orders skipped because they were already in unlocked bundles
+    results.already_bundled_skipped = orders.length - eligibleOrders.length - 
+      (existingMarkings || []).filter(m => lockedBundleIds.has(m.bundle_id)).length;
 
     for (const [customerKey, customerOrders] of Object.entries(customerGroups)) {
       const timeSubGroups = groupOrdersByTimeWindow(customerOrders, BUNDLE_WINDOW_DAYS);
@@ -212,23 +241,24 @@ export default async function handler(req, res) {
 
         results.created++;
 
-        for (const order of subGroup) {
+        // Batch upsert markings for better performance
+        const markingsToUpsert = subGroup.map((order) => {
           const existingMarking = markingsMap[order.fleek_id];
           const packingStatus = existingMarking?.packing_status || "Pending";
+          return {
+            fleek_id: order.fleek_id,
+            bundle_id: newBundleId,
+            packing_status: packingStatus,
+            updated_at: new Date().toISOString(),
+          };
+        });
 
-          const { error: upsertError } = await supabase.from("order_markings").upsert(
-            {
-              fleek_id: order.fleek_id,
-              bundle_id: newBundleId,
-              packing_status: packingStatus,
-              updated_at: new Date().toISOString(),
-            },
-            { onConflict: "fleek_id" }
-          );
+        const { error: upsertError } = await supabase
+          .from("order_markings")
+          .upsert(markingsToUpsert, { onConflict: "fleek_id" });
 
-          if (upsertError) {
-            results.errors.push(`Order upsert error for ${order.fleek_id}: ${upsertError.message}`);
-          }
+        if (upsertError) {
+          results.errors.push(`Batch upsert error for ${customerKey}: ${upsertError.message}`);
         }
       }
     }

@@ -6,7 +6,7 @@ const CONFIG = {
     clientId: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
-    spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID || '13gjj21TS80z2HdNzWxl5Ciftfutd_4sHyEy_yJjvebM',
+    spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID,
     sheetName: process.env.GOOGLE_SHEET_NAME || 'RAW DATA',
     range: 'A:CZ',
   },
@@ -42,6 +42,10 @@ function num(v) { const n = Number(v); return isNaN(n) ? null : n; }
 function bool(v) { const s = String(v || '').toLowerCase().trim(); return s === 'true' || s === 'yes' || s === '1'; }
 
 async function fetchSeaOrders() {
+  if (!CONFIG.google.spreadsheetId) {
+    throw new Error('GOOGLE_SPREADSHEET_ID environment variable is not set');
+  }
+
   const client = await getSheets();
   const resp = await client.spreadsheets.values.get({
     spreadsheetId: CONFIG.google.spreadsheetId,
@@ -79,12 +83,17 @@ async function fetchSeaOrders() {
     (data || []).forEach(m => { markings[m.fleek_id] = m; });
   }
 
-  // Step 3: Find ALL orders where fleek_id starts with any sea order number + "_"
+  // Step 3: Find ALL orders where fleek_id matches any sea order number
+  // (exact match OR fleek_id starts with sea order number + "_")
   const matchedOrders = rows.map(r => {
     const fleek_id = clean(r[COLUMN_MAP.fleek_id]);
     if (!fleek_id) return null;
-    // Match fleek_id like "155335_66" if "155335" is in sea orders
-    if (!seaOrderNumbers.has(fleek_id)) return null;
+
+    // Check exact match OR prefix match (e.g., "155335_66" matches "155335")
+    const isSeaOrder = [...seaOrderNumbers].some(num => 
+      fleek_id === num || fleek_id.startsWith(num + '_')
+    );
+    if (!isSeaOrder) return null;
 
     return {
       fleek_id,

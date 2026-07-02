@@ -1,35 +1,39 @@
 // BundleSync Smooth Save Fix
 // Replaces full re-render after save with in-place row update
+// Compatible with index.html's saveSt() flow
 
 (function() {
-  const _origSaveStatus = window.saveStatus;
+  // Store original mSave (marking API wrapper)
+  const _origMSave = window.mSave;
 
-  window.saveStatus = async function(fleekId) {
-    const btn = document.getElementById('btn-' + fleekId);
-    const select = document.getElementById('status-' + fleekId);
+  window.mSave = async function(fleekId, newStatus) {
+    // Find the correct button and select for this fleekId
+    const btn = document.getElementById('b-' + fleekId) ||
+                document.getElementById('zb-' + fleekId) ||
+                document.getElementById('sb-' + fleekId);
 
-    if (!btn || !select) {
-      if (_origSaveStatus) return _origSaveStatus(fleekId);
-      return;
+    const select = document.getElementById('st-' + fleekId) ||
+                   document.getElementById('zst-' + fleekId) ||
+                   document.getElementById('sst-' + fleekId);
+
+    // Show loading state on button
+    if (btn) {
+      const icSave = btn.querySelector('._s');
+      const icLoad = btn.querySelector('._l');
+      if (icSave) icSave.classList.add('hidden');
+      if (icLoad) icLoad.classList.remove('hidden');
+      btn.disabled = true;
     }
 
-    const newStatus = select.value;
-
-    // Show loading state
-    const icSave = btn.querySelector('.ic-save');
-    const icLoad = btn.querySelector('.ic-load');
-    if (icSave) icSave.classList.add('hidden');
-    if (icLoad) icLoad.classList.remove('hidden');
-    btn.disabled = true;
-
     try {
+      // Call original API
       const res = await fetch('/api/marking', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           fleek_id: fleekId,
           packing_status: newStatus,
-          marked_by: window.currentUser || 'admin'
+          marked_by: (window.cu && window.cu.name) || 'unknown'
         })
       });
 
@@ -37,75 +41,73 @@
       if (!res.ok) throw new Error(data.error || 'Save failed');
 
       // In-place update — NO full re-render
-      select.dataset.packingStatus = newStatus;
+      if (select) {
+        select.dataset.packingStatus = newStatus;
+        // Update visual class
+        if (window.pC) {
+          const prefix = select.id.startsWith('zst-') || select.id.startsWith('sst-') ? 'ssel flex-1 px-2.5 py-1.5 rounded-lg cursor-pointer ' : 'ssel flex-1 px-2.5 py-1.5 rounded-lg cursor-pointer ';
+          select.className = (prefix + window.pC(newStatus)).trim();
+        }
+      }
 
-      // Update countdown state
-      const isHold = newStatus === 'Hold for bundling';
-      select.dataset.holdCountdown = isHold ? 'true' : 'false';
-
-      // Update row class smoothly
-      const row = btn.closest('tr');
+      // Update row styling
+      const row = btn ? btn.closest('tr') : document.querySelector(`[data-fid="${fleekId}"]`);
       if (row) {
-        // Remove old status classes
+        // Remove old SLA breach classes
         row.classList.remove('sla-breach', 'sla-breach-pulse');
 
-        // Update packing status class on select
-        if (window.packingStatusClass) {
-          const newClass = window.packingStatusClass(newStatus);
-          select.className = 'status-select flex-1 px-2.5 py-1.5 border rounded-lg cursor-pointer ' + newClass;
-        }
-
-        // Update hold countdown text in row
-        const countdownEl = row.querySelector('[data-hold-countdown]');
-        if (countdownEl) {
-          countdownEl.dataset.packingStatus = newStatus;
-          countdownEl.dataset.holdCountdown = isHold ? 'true' : 'false';
-
-          if (!isHold) {
-            // Find countdown text element and clear it
-            const dateCell = row.querySelector('td:nth-child(2) p:last-child');
-            if (dateCell) dateCell.textContent = '\u2014';
+        // Update "Marked" timestamp in row if exists
+        const markedEls = row.querySelectorAll('div');
+        markedEls.forEach(el => {
+          if (el.textContent && el.textContent.includes('Marked:')) {
+            const now = new Date();
+            const fd = window.fd || ((d) => new Date(d).toLocaleDateString('en-GB', {day:'2-digit', month:'short'}));
+            el.textContent = '✓ Marked: ' + fd(now.toISOString());
+            el.style.color = '#10b981';
           }
-        }
-
-        // Update "Updated" timestamp in row
-        const updatedEl = row.querySelector('td:last-child p');
-        if (updatedEl) {
-          const now = new Date();
-          const formatted = now.toLocaleString('en-GB', {
-            day: '2-digit', month: 'short', year: 'numeric',
-            hour: '2-digit', minute: '2-digit'
-          });
-          updatedEl.textContent = 'Updated: ' + formatted;
-        }
+        });
       }
 
-      // Update in-memory orders array
+      // Update in-memory arrays
       if (window.orders) {
         const order = window.orders.find(o => o.fleek_id === fleekId);
-        if (order) order.packing_status = newStatus;
+        if (order) {
+          order.packing_status = newStatus;
+          order.marking_updated_at = new Date().toISOString();
+        }
       }
-      if (window.filteredOrders) {
-        const order = window.filteredOrders.find(o => o.fleek_id === fleekId);
-        if (order) order.packing_status = newStatus;
+      if (window.seaOrders) {
+        const so = window.seaOrders.find(o => o.fleek_id === fleekId);
+        if (so) {
+          so.packing_status = newStatus;
+          so.marking_updated_at = new Date().toISOString();
+        }
       }
 
-      // Brief green flash on button (no blink)
-      btn.style.background = '#16a34a';
-      setTimeout(() => { btn.style.background = ''; }, 800);
+      // Brief green flash on button
+      if (btn) {
+        const origBg = btn.style.background;
+        btn.style.background = '#16a34a';
+        setTimeout(() => { btn.style.background = origBg; }, 800);
+      }
 
+      return data;
     } catch (err) {
       console.error('Save failed:', err);
-      alert('Save failed: ' + err.message);
-      // Revert select
-      if (window.orders) {
+      // Revert select on error
+      if (select && window.orders) {
         const order = window.orders.find(o => o.fleek_id === fleekId);
-        if (order && select) select.value = order.packing_status || 'Pending';
+        if (order) select.value = order.packing_status || 'Pending';
       }
+      throw err;
     } finally {
-      if (icSave) icSave.classList.remove('hidden');
-      if (icLoad) icLoad.classList.add('hidden');
-      btn.disabled = false;
+      if (btn) {
+        const icSave = btn.querySelector('._s');
+        const icLoad = btn.querySelector('._l');
+        if (icSave) icSave.classList.remove('hidden');
+        if (icLoad) icLoad.classList.add('hidden');
+        btn.disabled = false;
+      }
     }
   };
 
@@ -156,5 +158,4 @@
     clearInterval(window.holdCountdownInterval);
   }
   window.holdCountdownInterval = setInterval(smoothCountdownTick, 60000);
-
 })();
