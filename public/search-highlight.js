@@ -77,8 +77,12 @@
 
   function isVisible(el) {
     if (!el) return false;
-    const style = window.getComputedStyle(el);
-    if (style.display === 'none' || style.visibility === 'hidden') return false;
+    let current = el;
+    while (current && current !== document.body && current !== document.documentElement) {
+      const style = window.getComputedStyle(current);
+      if (style.display === 'none' || style.visibility === 'hidden') return false;
+      current = current.parentElement;
+    }
     return true;
   }
 
@@ -181,7 +185,7 @@
     const firstRow = document.querySelector('.' + HIT_CLASS);
     const target = firstRow || firstMark;
 
-    if (target) {
+    if (target && isVisible(target)) {
       state.lastScrolledTerm = term;
       state.pendingScroll = false;
       target.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -238,7 +242,37 @@
     if (state.observerStarted) return;
     state.observerStarted = true;
 
-    const observer = new MutationObserver(() => {
+    const observer = new MutationObserver((mutations) => {
+      let shouldRefresh = false;
+
+      for (const m of mutations) {
+        if (m.type === 'childList') {
+          shouldRefresh = true;
+          break;
+        }
+        if (m.type === 'attributes') {
+          if (m.attributeName === 'class') {
+            const target = m.target;
+            const oldClass = m.oldValue || '';
+            const newClass = (target.className || '').toString();
+            const visibilityClasses = ['on', 'hidden', 'active', 'show', 'open'];
+            for (const cls of visibilityClasses) {
+              if (oldClass.includes(cls) !== newClass.includes(cls)) {
+                shouldRefresh = true;
+                break;
+              }
+            }
+            if (shouldRefresh) break;
+          }
+          if (m.attributeName === 'style' || m.attributeName === 'hidden') {
+            shouldRefresh = true;
+            break;
+          }
+        }
+      }
+
+      if (!shouldRefresh) return;
+
       if (state.currentTerm) {
         clearTimeout(state.debounceTimer);
         state.debounceTimer = setTimeout(() => {
@@ -252,9 +286,24 @@
 
     observer.observe(document.body, {
       childList: true,
-      subtree: true
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['class', 'style', 'hidden'],
+      attributeOldValue: true
     });
   }
+
+  // Re-highlight when switching tabs/screens via click
+  document.addEventListener('click', (e) => {
+    const tabBtn = e.target.closest('[data-scr], [onclick*="goScr"], [onclick*="aTab"]');
+    if (tabBtn) {
+      setTimeout(() => {
+        if (state.currentTerm) {
+          highlightTerm(state.currentTerm);
+        }
+      }, 60);
+    }
+  });
 
   document.addEventListener('input', (e) => {
     if (isSearchInput(e.target)) {
