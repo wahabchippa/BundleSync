@@ -7,6 +7,7 @@ const supabase = createClient(
 );
 
 const BUNDLE_WINDOW_DAYS = 3;
+const MAX_BUNDLE_SIZE = 15;
 
 function generateBundleId(customerKey) {
   const timestamp = Date.now();
@@ -202,6 +203,7 @@ export default async function handler(req, res) {
       locked_skipped: 0,
       ignored_singletons: 0,
       time_window_splits: 0,
+      oversized_splits: 0,
       already_bundled_skipped: 0,
       errors: []
     };
@@ -211,13 +213,26 @@ export default async function handler(req, res) {
       (existingMarkings || []).filter(m => lockedBundleIds.has(m.bundle_id)).length;
 
     for (const [customerKey, customerOrders] of Object.entries(customerGroups)) {
-      const timeSubGroups = groupOrdersByTimeWindow(customerOrders, BUNDLE_WINDOW_DAYS);
+      let timeSubGroups = groupOrdersByTimeWindow(customerOrders, BUNDLE_WINDOW_DAYS);
 
       if (timeSubGroups.length > 1) {
         results.time_window_splits += timeSubGroups.length - 1;
       }
 
-      for (const subGroup of timeSubGroups) {
+      // Split oversized groups into max MAX_BUNDLE_SIZE chunks
+      const finalGroups = [];
+      for (const g of timeSubGroups) {
+        if (g.length > MAX_BUNDLE_SIZE) {
+          for (let i = 0; i < g.length; i += MAX_BUNDLE_SIZE) {
+            finalGroups.push(g.slice(i, i + MAX_BUNDLE_SIZE));
+          }
+          results.oversized_splits += Math.ceil(g.length / MAX_BUNDLE_SIZE) - 1;
+        } else {
+          finalGroups.push(g);
+        }
+      }
+
+      for (const subGroup of finalGroups) {
         if (subGroup.length < 2) {
           results.ignored_singletons += subGroup.length;
           continue;

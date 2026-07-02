@@ -151,6 +151,7 @@
         locked_skipped: 0,
         ignored_singletons: 0,
         time_window_splits: 0,
+        oversized_splits: 0,
         already_bundled_skipped: 0,
         errors: []
       };
@@ -165,6 +166,7 @@
         merged.locked_skipped += Number(r.locked_skipped || 0);
         merged.ignored_singletons += Number(r.ignored_singletons || 0);
         merged.time_window_splits += Number(r.time_window_splits || 0);
+        merged.oversized_splits += Number(r.oversized_splits || 0);
         merged.already_bundled_skipped += Number(r.already_bundled_skipped || 0);
 
         if (Array.isArray(r.errors) && r.errors.length) {
@@ -176,7 +178,8 @@
         'Done. Bundles: ' + merged.created +
         ', Singles: ' + merged.ignored_singletons +
         ', Locked skipped: ' + merged.locked_skipped +
-        ', Already bundled: ' + merged.already_bundled_skipped;
+        ', Already bundled: ' + merged.already_bundled_skipped +
+        ', Oversized splits: ' + merged.oversized_splits;
 
       console.log('Admin sync result:', merged);
       alert('Sync complete');
